@@ -26,19 +26,27 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import go_spatial.com.github.tegola.mobile.android.controller.GPKG;
 import go_spatial.com.github.tegola.mobile.android.controller.utils.Files;
 
 public class ManageGpkgBundlesActivity extends AppCompatActivity {
     private final static String TAG = ManageGpkgBundlesActivity.class.getCanonicalName();
 
-    private ImageButton m_btn_manage__geopackage_bundles__close = null;
-    private Button m_btn_gpkg_bundle__install = null;
-    private ListView m_lv_gpk_bundles__installed = null;
+    @BindView(R.id.btn_manage__geopackage_bundles__close)
+    protected ImageButton m_btn_manage__geopackage_bundles__close;
+    @BindView(R.id.btn_install_remote_gpkg_bundle)
+    protected Button m_btn_gpkg_bundle__install;
+    @BindView(R.id.lv_gpkg_bundles__installed)
+    protected ListView m_lv_gpk_bundles__installed;
+    @BindView(R.id.tv_gpkg_bundles__none_installed)
+    protected TextView m_tv_gpkg_bundles__none_installed;
+    @BindView(R.id.btn_gpkg_bundle__uninstall)
+    protected Button m_btn_gpkg_bundle__uninstall;
+
     private final ArrayList<String> m_lv_gpkg_bundles__installed__items = new ArrayList<String>();
     private Long m_hashcode__first__installed__items = null;
-    private TextView m_tv_gpkg_bundles__none_installed = null;
-    private Button m_btn_gpkg_bundle__uninstall = null;
 
     public static final int MNG_GPKG_BUNDLES_RESULT__CHANGED = 0;
     public static final int MNG_GPKG_BUNDLES_RESULT__UNCHANGED = -1;
@@ -208,12 +216,7 @@ public class ManageGpkgBundlesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_gpkg_bundles);
 
-        //map UI objects to UI resources
-        m_btn_manage__geopackage_bundles__close = (ImageButton)findViewById(R.id.btn_manage__geopackage_bundles__close);
-        m_btn_gpkg_bundle__install = (Button)findViewById(R.id.btn_install_remote_gpkg_bundle);
-        m_lv_gpk_bundles__installed = (ListView)findViewById(R.id.lv_gpkg_bundles__installed);
-        m_tv_gpkg_bundles__none_installed = (TextView)findViewById(R.id.tv_gpkg_bundles__none_installed);
-        m_btn_gpkg_bundle__uninstall = (Button)findViewById(R.id.btn_gpkg_bundle__uninstall);
+        ButterKnife.bind(this);
 
         //set up associated UI objects auxiliary objects if any - e.g. TAGs and data adapters
         //m_lv_gpk_bundles__installed__dataadapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_multiple_choice, m_lv_gpkg_bundles__installed__items);

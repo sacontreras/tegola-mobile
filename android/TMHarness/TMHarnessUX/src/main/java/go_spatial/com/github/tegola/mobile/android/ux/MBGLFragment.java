@@ -36,6 +36,9 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.concurrent.TimeUnit;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import go_spatial.com.github.tegola.mobile.android.controller.utils.Files;
 import okhttp3.Cache;
 import okhttp3.Call;
@@ -99,30 +102,48 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
 
     private OnFragmentInteractionListener mFragInteractionListener;
 
-    private View loadingPanel = null;
-    private MapView mapView = null;
+    @BindView(R.id.loadingPanel)
+    protected View loadingPanel;
+    @BindView(R.id.mapView)
+    protected MapView mapView;
+    @BindView(R.id.tv_attribution)
+    protected TextView m_tv_attribution;
+    @BindView(R.id.tv_tegola_version)
+    protected TextView m_tv_version;
+    @BindView(R.id.tv_camera_loc)
+    protected TextView m_tv_camera_loc;
+    @BindView(R.id.mv_sublayout_camera)
+    protected View m_cam_ctrl_container;
+    @BindView(R.id.ibtn_zoom_in)
+    protected ImageButton m_ibtn_zoom_in;
+    @BindView(R.id.ibtn_zoom_out)
+    protected ImageButton m_ibtn_zoom_out;
+    @BindView(R.id.ibtn_rotate_left)
+    protected ImageButton m_ibtn_rotate_left;
+    @BindView(R.id.ibtn_rotate_up)
+    protected ImageButton m_ibtn_rotate_up;
+    @BindView(R.id.ibtn_rotate_down)
+    protected ImageButton m_ibtn_rotate_down;
+    @BindView(R.id.ibtn_rotate_right)
+    protected ImageButton m_ibtn_rotate_right;
+    @BindView(R.id.ibtn_goto_loc)
+    protected ImageButton m_ibtn_goto_loc;
+    @BindView(R.id.ibtn_goto_map_ctr)
+    protected ImageButton m_ibtn_goto_map_ctr;
+    @BindView(com.mapbox.mapboxsdk.R.id.compassView)
+    protected CompassView m_cv;
+    @BindView(R.id.ctv_show_camera_loc)
+    protected CheckBox m_ctv_show_camera_loc;
+    @BindView(R.id.ctv_sync_location)
+    protected CheckBox m_ctv_sync_location;
+    @BindView(R.id.ibtn_hide_mbgl_frag)
+    protected ImageButton ibtn_hide_mbgl_frag;
 
     private Dispatcher m_okhttp3_client_dispather = null;
     private OkHttpClient m_okhttp3_client = null;
     private MapboxMap m_mapboxMap = null;
-    private TextView m_tv_attribution = null;
-    private TextView m_tv_version = null;
-    private TextView m_tv_camera_loc = null;
 
-    private CompassView m_cv = null;
-    private View m_cam_ctrl_container = null;
-    private ImageButton m_ibtn_zoom_in = null;
-    private ImageButton m_ibtn_rotate_left = null;
-    private ImageButton m_ibtn_rotate_up = null;
-    private ImageButton m_ibtn_rotate_down = null;
-    private ImageButton m_ibtn_rotate_right = null;
-    private ImageButton m_ibtn_zoom_out = null;
-    private ImageButton m_ibtn_goto_loc = null;
-    private ImageButton m_ibtn_goto_map_ctr = null;
-
-    private CheckBox m_ctv_show_camera_loc = null;
-    private CheckBox m_ctv_sync_location = null;
-    private ImageButton ibtn_hide_mbgl_frag = null;
+    private Unbinder unbinder;
 
     private final double ZOOM_BY = .25;
     private final double TILT_BY = 7.5; //degrees
@@ -298,7 +319,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         // Inflate the layout for this fragment
         View this_frag_layout_view = inflater.inflate(R.layout.fragment_mbgl, container, false);
 
-        loadingPanel = this_frag_layout_view.findViewById(R.id.loadingPanel);
+        unbinder = ButterKnife.bind(this, this_frag_layout_view);
 
         if (BuildConfig.mbgl_http_cache_size > 0) {
             try {
@@ -336,7 +357,6 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         Log.d(TAG, "(fragment) onCreateView: mbgl http read timeout set to: " + BuildConfig.mbgl_http_read_timeout + " seconds");
         HttpRequestUtil.setOkHttpClient(m_okhttp3_client);
 
-        mapView = (MapView)this_frag_layout_view.findViewById(R.id.mapView);
         mapView.addOnMapChangedListener(new MapView.OnMapChangedListener() {
             @Override
             public void onMapChanged(int change) {
@@ -424,138 +444,85 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
                 }
             }
         });
-        m_tv_attribution = (TextView)this_frag_layout_view.findViewById(R.id.tv_attribution);
-        m_tv_version = (TextView)this_frag_layout_view.findViewById(R.id.tv_tegola_version);
-        m_tv_camera_loc = (TextView)this_frag_layout_view.findViewById(R.id.tv_camera_loc);
 
-        m_cam_ctrl_container = (View)this_frag_layout_view.findViewById(R.id.mv_sublayout_camera);
-        m_ibtn_zoom_in = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_zoom_in);
-        m_ibtn_zoom_in.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                move_camera(
-                        null,
-                        null,
-                        m_mapboxMap.getCameraPosition().zoom + ZOOM_BY,
-                        null,
-                        null
-                );
-                return true;
-            }
+        m_ibtn_zoom_in.setOnTouchListener((v, event) -> {
+            move_camera(
+                    null,
+                    null,
+                    m_mapboxMap.getCameraPosition().zoom + ZOOM_BY,
+                    null,
+                    null
+            );
+            return true;
         });
-        m_ibtn_zoom_out = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_zoom_out);
-        m_ibtn_zoom_out.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                move_camera(
-                        null,
-                        null,
-                        m_mapboxMap.getCameraPosition().zoom - ZOOM_BY,
-                        null,
-                        null
-                );
-                return true;
-            }
+        m_ibtn_zoom_out.setOnTouchListener((v, event) -> {
+            move_camera(
+                    null,
+                    null,
+                    m_mapboxMap.getCameraPosition().zoom - ZOOM_BY,
+                    null,
+                    null
+            );
+            return true;
         });
-        m_ibtn_rotate_left = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_rotate_left);
-        m_ibtn_rotate_left.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                //ROTATE_BY
-                move_camera(
-                        null,
-                        null,
-                        null,
-                        m_mapboxMap.getCameraPosition().bearing - ROTATE_BY,
-                        null);
-                return true;
-            }
+        m_ibtn_rotate_left.setOnTouchListener((v, event) -> {
+            //ROTATE_BY
+            move_camera(
+                    null,
+                    null,
+                    null,
+                    m_mapboxMap.getCameraPosition().bearing - ROTATE_BY,
+                    null);
+            return true;
         });
-        m_ibtn_rotate_up = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_rotate_up);
-        m_ibtn_rotate_up.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                move_camera(
-                        null,
-                        null,
-                        null,
-                        null,
-                        m_mapboxMap.getCameraPosition().tilt + TILT_BY);
-                return true;
-            }
+        m_ibtn_rotate_up.setOnTouchListener((v, event) -> {
+            move_camera(
+                    null,
+                    null,
+                    null,
+                    null,
+                    m_mapboxMap.getCameraPosition().tilt + TILT_BY);
+            return true;
         });
-        m_ibtn_rotate_down = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_rotate_down);
-        m_ibtn_rotate_down.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                move_camera(
-                        null,
-                        null,
-                        null,
-                        null,
-                        m_mapboxMap.getCameraPosition().tilt - TILT_BY);
-                return true;
-            }
+        m_ibtn_rotate_down.setOnTouchListener((v, event) -> {
+            move_camera(
+                    null,
+                    null,
+                    null,
+                    null,
+                    m_mapboxMap.getCameraPosition().tilt - TILT_BY);
+            return true;
         });
-        m_ibtn_rotate_right = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_rotate_right);
-        m_ibtn_rotate_right.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                //ROTATE_BY
-                move_camera(
-                        null,
-                        null,
-                        null,
-                        m_mapboxMap.getCameraPosition().bearing + ROTATE_BY,
-                        null);
-                return true;
-            }
+        m_ibtn_rotate_right.setOnTouchListener((v, event) -> {
+            //ROTATE_BY
+            move_camera(
+                    null,
+                    null,
+                    null,
+                    m_mapboxMap.getCameraPosition().bearing + ROTATE_BY,
+                    null);
+            return true;
         });
-        m_ibtn_goto_loc = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_goto_loc);
-        m_ibtn_goto_loc.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            }
+        m_ibtn_goto_loc.setOnClickListener(v -> {
         });
-        m_ibtn_goto_map_ctr = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_goto_map_ctr);
-        m_ibtn_goto_map_ctr.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                move_camera(
-                        tegolaCapabilities.parsed.maps[0].center.latitude,
-                        tegolaCapabilities.parsed.maps[0].center.longitude,
-                        tegolaCapabilities.parsed.maps[0].center.zoom,
-                        0.0,
-                        null
-                );
-            }
-        });
-        m_cv = (CompassView)this_frag_layout_view.findViewById(com.mapbox.mapboxsdk.R.id.compassView);
+        m_ibtn_goto_map_ctr.setOnClickListener(v -> move_camera(
+                tegolaCapabilities.parsed.maps[0].center.latitude,
+                tegolaCapabilities.parsed.maps[0].center.longitude,
+                tegolaCapabilities.parsed.maps[0].center.zoom,
+                0.0,
+                null
+        ));
 
-        m_ctv_show_camera_loc = (CheckBox)this_frag_layout_view.findViewById(R.id.ctv_show_camera_loc);
-        m_ctv_show_camera_loc.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                m_tv_camera_loc.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-            }
+        m_ctv_show_camera_loc.setOnCheckedChangeListener((buttonView, isChecked) -> m_tv_camera_loc.setVisibility(isChecked ? View.VISIBLE : View.GONE));
+        m_ctv_sync_location.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked)
+                LocationUpdatesManager.getInstance().start_updates();
+            else
+                LocationUpdatesManager.getInstance().stop_updates();
         });
-        m_ctv_sync_location = (CheckBox)this_frag_layout_view.findViewById(R.id.ctv_sync_location);
-        m_ctv_sync_location.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    LocationUpdatesManager.getInstance().start_updates();
-                else
-                    LocationUpdatesManager.getInstance().stop_updates();
-            }
-        });
-        ibtn_hide_mbgl_frag = (ImageButton)this_frag_layout_view.findViewById(R.id.ibtn_hide_mbgl_frag);
-        ibtn_hide_mbgl_frag.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mFragInteractionListener != null)
-                    mFragInteractionListener.onFragmentInteraction(OnFragmentInteractionListener.E_MBGL_FRAG_ACTION.HIDE);
-            }
+        ibtn_hide_mbgl_frag.setOnClickListener(v -> {
+            if (mFragInteractionListener != null)
+                mFragInteractionListener.onFragmentInteraction(OnFragmentInteractionListener.E_MBGL_FRAG_ACTION.HIDE);
         });
 
         //disable mbgl telemetry
@@ -786,6 +753,8 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         }
 
         LocationUpdatesManager.getInstance().stop_updates();
+
+        unbinder.unbind();
     }
 
     @Override

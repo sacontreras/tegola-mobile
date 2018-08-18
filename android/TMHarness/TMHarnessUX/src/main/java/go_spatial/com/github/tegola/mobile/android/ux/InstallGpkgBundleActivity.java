@@ -31,6 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import go_spatial.com.github.tegola.mobile.android.controller.*;
 import go_spatial.com.github.tegola.mobile.android.controller.Constants;
 import go_spatial.com.github.tegola.mobile.android.controller.utils.Files;
@@ -42,19 +44,32 @@ import timber.log.Timber;
 public class InstallGpkgBundleActivity extends AppCompatActivity {
     private final static String TAG = InstallGpkgBundleActivity.class.getCanonicalName();
 
-    private ImageButton m_btn_install_remote_gpkg_bundle__cancel = null;
-    private TextView m_tv_lbl_remote_gpkg_bundle__root_url__http_proto_prefix = null;
-    private EditText m_edt_remote_gpkg_bundle__root_url = null;
-    private EditText m_edt_remote_gpkg_bundle__name = null;
-    private ImageButton m_ibtn_help_gpkg_name = null;
-    private EditText m_edt_remote_gpkg_bundle__ver_props = null;
-    private ImageButton m_ibtn_help_gpkg_props_file = null;
-    private EditText m_edt_local_gpkg_bundle__name = null;
-    private Button m_btn_install_remote_gpkg_bundle = null;
-    private View m_vw_progress = null;
-    private TextView m_tv_val__install_gpkg_bundle__file_download_progress = null;
-    private ProgressBar m_pb = null;
-    private TextView m_tv_val__install_gpkg_bundle__file_download_progress__bytes = null;
+    @BindView(R.id.btn_install_remote_geopackage_bundle__cancel)
+    protected ImageButton m_btn_install_remote_gpkg_bundle__cancel;
+    @BindView(R.id.tv_lbl_remote_gpkg_bundle__root_url__http_proto_prefix)
+    protected TextView m_tv_lbl_remote_gpkg_bundle__root_url__http_proto_prefix;
+    @BindView(R.id.edt_remote_gpkg_bundle__root_url)
+    protected EditText m_edt_remote_gpkg_bundle__root_url;
+    @BindView(R.id.edt_remote_gpkg_bundle__name)
+    protected EditText m_edt_remote_gpkg_bundle__name;
+    @BindView(R.id.ibtn_help_gpkg_name)
+    protected ImageButton m_ibtn_help_gpkg_name;
+    @BindView(R.id.edt_remote_gpkg_bundle__ver_props)
+    protected EditText m_edt_remote_gpkg_bundle__ver_props;
+    @BindView(R.id.ibtn_help_gpkg_props_file)
+    protected ImageButton m_ibtn_help_gpkg_props_file;
+    @BindView(R.id.edt_local_gpkg_bundle__name)
+    protected EditText m_edt_local_gpkg_bundle__name;
+    @BindView(R.id.btn_install_remote_gpkg_bundle)
+    protected Button m_btn_install_remote_gpkg_bundle;
+    @BindView(R.id.sect_content__item__install_remote_gpkg_bundle__progress)
+    protected View m_vw_progress;
+    @BindView(R.id.tv_val__install_gpkg_bundle__file_download_progress)
+    protected TextView m_tv_val__install_gpkg_bundle__file_download_progress;
+    @BindView(R.id.pb)
+    protected ProgressBar m_pb;
+    @BindView(R.id.tv_val__install_gpkg_bundle__file_download_progress__bytes)
+    protected TextView m_tv_val__install_gpkg_bundle__file_download_progress__bytes;
 
     private final int PROG_MAX = 100;
 
@@ -66,42 +81,28 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
         NOT_STARTED, STARTING, IN_PROGRESS, CANCELLED, DONE_WITH_EXCEPTION, DONE;
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_install_gpkg_bundle);
 
-        m_btn_install_remote_gpkg_bundle__cancel = (ImageButton)findViewById(R.id.btn_install_remote_geopackage_bundle__cancel);
-        m_tv_lbl_remote_gpkg_bundle__root_url__http_proto_prefix = (TextView)findViewById(R.id.tv_lbl_remote_gpkg_bundle__root_url__http_proto_prefix);
-        m_edt_remote_gpkg_bundle__root_url = (EditText) findViewById(R.id.edt_remote_gpkg_bundle__root_url);
+        ButterKnife.bind(this);
 
-        m_edt_remote_gpkg_bundle__name = (EditText) findViewById(R.id.edt_remote_gpkg_bundle__name);
         m_edt_remote_gpkg_bundle__name.setOnKeyListener(OnKeyListener__disable_install);
         m_edt_remote_gpkg_bundle__name.setOnEditorActionListener(OnEditorActionListener__validate_enable_install);
         m_edt_remote_gpkg_bundle__name.setOnFocusChangeListener(OnFocusChangeListener__validate_enable_install);
 
-        m_ibtn_help_gpkg_name = (ImageButton)findViewById(R.id.ibtn_help_gpkg_name);
         m_ibtn_help_gpkg_name.setOnClickListener(onHelpButtonClickLister);
 
-        m_edt_remote_gpkg_bundle__ver_props = (EditText)findViewById(R.id.edt_remote_gpkg_bundle__ver_props);
         m_edt_remote_gpkg_bundle__ver_props.setOnKeyListener(OnKeyListener__disable_install);
         m_edt_remote_gpkg_bundle__ver_props.setOnEditorActionListener(OnEditorActionListener__validate_enable_install);
         m_edt_remote_gpkg_bundle__ver_props.setOnFocusChangeListener(OnFocusChangeListener__validate_enable_install);
 
-        m_ibtn_help_gpkg_props_file = (ImageButton)findViewById(R.id.ibtn_help_gpkg_props_file);
         m_ibtn_help_gpkg_props_file.setOnClickListener(onHelpButtonClickLister);
 
-        m_edt_local_gpkg_bundle__name = (EditText)findViewById(R.id.edt_local_gpkg_bundle__name);
         m_edt_local_gpkg_bundle__name.setOnKeyListener(OnKeyListener__disable_install);
         m_edt_local_gpkg_bundle__name.setOnEditorActionListener(OnEditorActionListener__validate_enable_install);
         m_edt_local_gpkg_bundle__name.setOnFocusChangeListener(OnFocusChangeListener__validate_enable_install);
-
-        m_btn_install_remote_gpkg_bundle = (Button)findViewById(R.id.btn_install_remote_gpkg_bundle);
-        m_vw_progress = findViewById(R.id.sect_content__item__install_remote_gpkg_bundle__progress);
-        m_tv_val__install_gpkg_bundle__file_download_progress = (TextView)findViewById(R.id.tv_val__install_gpkg_bundle__file_download_progress);
-        m_pb = (ProgressBar)findViewById(R.id.pb);
-        m_tv_val__install_gpkg_bundle__file_download_progress__bytes = (TextView)findViewById(R.id.tv_val__install_gpkg_bundle__file_download_progress__bytes);
 
         m_btn_install_remote_gpkg_bundle__cancel.setOnClickListener(OnClickListener__m_btn_install_remote_gpkg_bundle__cancel);
         m_btn_install_remote_gpkg_bundle.setOnClickListener(OnClickListener__m_btn_install_remote_gpkg_bundle);

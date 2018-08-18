@@ -38,12 +38,7 @@ public class DrawerHandle implements DrawerLayout.DrawerListener {
     private Display mDisplay;
     private Point mScreenDimensions = new Point();
 
-    private OnClickListener mHandleClickListener = new OnClickListener(){
-        @Override
-        public void onClick(View v) {
-            toggle();
-        }
-    };
+    private OnClickListener mHandleClickListener = v -> toggle();
 
     private OnTouchListener mHandleTouchListener = new OnTouchListener() {
         private static final int MAX_CLICK_DURATION = 200;
@@ -79,8 +74,8 @@ public class DrawerHandle implements DrawerLayout.DrawerListener {
 
     private float getTranslation(float slideOffset) {
         return (mGravity == GravityCompat.START || mGravity == Gravity.LEFT)
-                    ? slideOffset * (mDrawer.getWidth())
-                    : -slideOffset * (mDrawer.getWidth());
+            ? slideOffset * (mDrawer.getWidth())
+            : -slideOffset * (mDrawer.getWidth());
     }
 
     private void updateScreenDimensions() {

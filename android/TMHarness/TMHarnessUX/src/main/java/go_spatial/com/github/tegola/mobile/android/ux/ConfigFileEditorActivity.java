@@ -19,6 +19,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class ConfigFileEditorActivity extends AppCompatActivity {
     private static final String TAG = ConfigFileEditorActivity.class.getCanonicalName();
 
@@ -26,8 +29,11 @@ public class ConfigFileEditorActivity extends AppCompatActivity {
     private MenuItem m_mnu_item__cfg_file_editor__commit_changes = null;
     private MenuItem m_mnu_item__cfg_file_editor__revert_changes = null;
     private MenuItem m_mnu_item__cfg_file_editor__close = null;
-    private ScrollView m_scvw_config_file_contents = null;
-    private CustomEditText m_editor = null;
+
+    @BindView(R.id.scvw_config_file_contents)
+    protected ScrollView m_scvw_config_file_contents;
+    @BindView(R.id.edt_config_file_contents)
+    protected CustomEditText m_editor;
 
     private int m_result = RESULT_CANCELED;
 
@@ -36,8 +42,8 @@ public class ConfigFileEditorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_config_file_editor);
 
-        m_scvw_config_file_contents = (ScrollView)findViewById(R.id.scvw_config_file_contents);
-        m_editor = (CustomEditText)findViewById(R.id.edt_config_file_contents);
+        ButterKnife.bind(this);
+
         m_editor.setBackgroundDrawable(null);
         set_editable(false);
 

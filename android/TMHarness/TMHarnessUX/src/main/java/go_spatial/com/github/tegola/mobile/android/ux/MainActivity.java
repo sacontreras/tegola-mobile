@@ -13,7 +13,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -28,6 +27,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -74,6 +74,13 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
+import butterknife.OnClick;
+import butterknife.OnEditorAction;
+import butterknife.OnFocusChange;
+import butterknife.OnItemSelected;
 import go_spatial.com.github.tegola.mobile.android.controller.ClientAPI;
 import go_spatial.com.github.tegola.mobile.android.controller.Exceptions;
 import go_spatial.com.github.tegola.mobile.android.controller.FGS;
@@ -87,68 +94,93 @@ import go_spatial.com.github.tegola.mobile.android.controller.Constants;
 public class MainActivity
         extends LocationUpdatesManager.LocationUpdatesBrokerActivity
         implements ClientAPI.ControllerNotificationsListener, MBGLFragment.OnFragmentInteractionListener {
+
     private static final String TAG = MainActivity.class.getCanonicalName();
 
-    private DrawerLayout m_drawerlayout = null;
-    private LinearLayout m_drawerlayout_content__main = null;
-    private LinearLayout m_drawerlayout_content__drawer = null;
-    private DrawerHandle m_drawer_handle = null;
-    private ActionBarDrawerToggle m_drawerlayout_main__DrawerToggle = null;
+    @BindView(R.id.drawerlayout)
+    protected DrawerLayout m_drawerlayout;
+    @BindView(R.id.drawerlayout_content__main)
+    protected LinearLayout m_drawerlayout_content__main;
+    @BindView(R.id.drawerlayout_content__drawer)
+    protected LinearLayout m_drawerlayout_content__drawer;
+    @BindView(R.id.sv_main)
+    protected ScrollView m_scvw_main;
+    @BindView(R.id.btn_sect__mbgl_nfo__expand)
+    protected Button m_btn_sect__mbgl_nfo__expand;
+    @BindView(R.id.sect_content__mbgl_nfo)
+    protected ExpandableRelativeLayout m_vw_sect_content__mbgl_nfo;
+    @BindView(R.id.rg_val_mvt_source_sel)
+    protected RadioGroup m_rg_val_mvt_source_sel;
+    @BindView(R.id.edt_val_http_client_cfg__connect_timeout)
+    protected EditText m_edt_val_http_client_cfg__connect_timeout;
+    @BindView(R.id.edt_val_http_client_cfg__read_timeout)
+    protected EditText m_edt_val_http_client_cfg__read_timeout;
+    @BindView(R.id.edt_val_http_client_cfg__cache_size)
+    protected EditText m_edt_val_http_client_cfg__cache_size;
+    @BindView(R.id.edt_val_http_client_cfg__max_requests_per_host)
+    protected EditText m_edt_val_http_client_cfg__max_requests_per_host;
+    @BindView(R.id.sect__local_srvr_nfo)
+    protected View m_sect__local_srvr_nfo;
+    @BindView(R.id.tv_val_bin_ver)
+    protected TextView m_tv_val_bin_ver;
+    @BindView(R.id.rb_postgis_provider_type_sel)
+    protected RadioButton m_rb_postgis_provider_type_sel;
+    @BindView(R.id.rb_gpkg_provider_type_sel)
+    protected RadioButton m_rb_gpkg_provider_type_sel;
+    @BindView(R.id.sect__postgis_provider_spec)
+    protected View m_sect__postgis_provider_spec;
+    @BindView(R.id.rb_postgis_local_config_type_sel)
+    protected RadioButton m_rb_postgis_local_config_type_sel;
+    @BindView(R.id.tv_lbl_gpkg_provider_type_sel__manage_bundles)
+    protected TextView m_tv_lbl_config_type_sel__local__manage_files;
+    @BindView(R.id.rb_postgis_remote_config_type_sel)
+    protected RadioButton m_rb_postgis_remote_config_type_sel;
+    @BindView(R.id.vw_postgis_local_config_sel__container)
+    protected View m_vw_postgis_local_config_sel__container;
+    @BindView(R.id.spinner_postgis_local_config_sel)
+    protected CustomSpinner m_spinner_postgis_local_config_sel;
+    @BindView(R.id.btn_postgis_local_config_sel__edit_file)
+    protected ImageButton m_btn_config_sel_local__edit_file;
+    //    private ImageButton m_btn_config_sel_local_import__googledrive = null;
+    @BindView(R.id.btn_postgis_local_config_import__sdcard)
+    protected ImageButton m_btn_postgis_local_config_import__sdcard;
+    @BindView(R.id.vw_postgis_remove_config__container)
+    protected View m_vw_postgis_remote_config__container;
+    @BindView(R.id.edt_postgis_remote_config_url)
+    protected EditText m_edt_postgis_remote_config_url;
+    @BindView(R.id.btn_postgis_remote_config_url__apply_changes)
+    protected Button m_btn_postgis_remote_config_url__apply_changes;
+    @BindView(R.id.sect__gpkg_provider_spec)
+    protected View m_sect__gpkg_provider_spec;
+    @BindView(R.id.spinner_gpkg_bundle_sel)
+    protected CustomSpinner m_spinner_gpkg_bundle_sel;
+    @BindView(R.id.spinner_gpkg_bundle_props_sel)
+    protected CustomSpinner m_spinner_gpkg_bundle_props_sel;
+    @BindView(R.id.tv_val_local_mvt_srvr_status)
+    protected TextView m_tv_val_local_mvt_srvr_status;
+    @BindView(R.id.btn_local_mvt_srvr_ctrl)
+    protected Button m_btn_local_mvt_srvr_ctrl;
+    @BindView(R.id.sect_content__item__srvr_console_output)
+    protected View m_sect_content__item__srvr_console_output;
+    @BindView(R.id.tv_tegola_console_output)
+    protected TextView m_tv_tegola_console_output;
+    @BindView(R.id.sect__remote_srvr_nfo)
+    protected View m_sect__remote_srvr_nfo;
+    @BindView(R.id.spinner_remote_tile_server_sel)
+    protected CustomSpinner m_spinner_val_remote_tile_server;
+    @BindView(R.id.btn_remote_mvt_srvr__open_stream)
+    protected Button m_btn_stream_tiles_from_remote;
 
-    private ScrollView m_scvw_main = null;
-
-    //mbgl info - UI objects
-    private Button m_btn_sect__mbgl_nfo__expand = null;
-    private ExpandableRelativeLayout m_vw_sect_content__mbgl_nfo = null;
-    private RadioGroup m_rg_val_mvt_source_sel = null;
-    private EditText m_edt_val_http_client_cfg__connect_timeout = null;
-    private EditText m_edt_val_http_client_cfg__read_timeout = null;
-    private EditText m_edt_val_http_client_cfg__cache_size = null;
-    private EditText m_edt_val_http_client_cfg__max_requests_per_host = null;
-
-    private View m_sect__local_srvr_nfo = null;
-    //srvr info - version - UI objects
-    private TextView m_tv_val_bin_ver = null;
-    //srvr info - provider sel postgis - UI objects
-    private RadioButton m_rb_val_provider_type_sel__postgis = null;
-    private View m_sect__postgis_provider_spec = null;
-    //srvr info - config sel local - UI objects
-    private RadioButton m_rb_val_config_type_sel__local = null;
-    private TextView m_tv_lbl_config_type_sel__local__manage_files = null;
-    private View m_vw_config_sel_container__local = null;
-    private CustomSpinner m_spinner_val_local_config = null;
     private final ArrayList<String> m_spinner_val_local_config__items = new ArrayList<String>();
     private CustomSpinner.Adapter m_spinner_val_local_config__dataadapter = null;
-    private ImageButton m_btn_config_sel_local__edit_file = null;
-//    private ImageButton m_btn_config_sel_local_import__googledrive = null;
-    private ImageButton m_btn_config_sel_local_import__sdcard = null;
-    //srvr info - config sel remote - UI objects
-    private RadioButton m_rb_val_config_type_sel__remote = null;
-    private View m_vw_config_sel_container__remote = null;
-    private EditText m_edt_val_config_sel__remote;
-    private Button m_btn_config_sel_remote_apply_changes = null;
-    //srvr info - provider sel gpkg - UI objects
-    private RadioButton m_rb_val_provider_type_sel__gpkg = null;
-    private View m_sect__gpkg_provider_spec = null;
-    private CustomSpinner m_spinner_val_gpkg_bundle = null;
     private final ArrayList<String> m_spinner_val_gpkg_bundle__items = new ArrayList<String>();
     private CustomSpinner.Adapter m_spinner_val_gpkg_bundle__dataadapter = null;
-    private CustomSpinner m_spinner_val_gpkg_bundle_props = null;
     private final ArrayList<String> m_spinner_val_gpkg_bundle_props__items = new ArrayList<String>();
     private CustomSpinner.Adapter m_spinner_val_gpkg_bundle_props__dataadapter = null;
-
-    //srvr info - status - UI objects
-    private TextView m_tv_val_srvr_status = null;
-    private Button m_btn_srvr_ctrl = null;
-    //srvr info - console output - UI objects
-    private View m_sect_content__item__srvr_console_output = null;
-    private TextView m_tv_tegola_console_output = null;
-
-    private View m_sect__remote_srvr_nfo = null;
-    private CustomSpinner m_spinner_val_remote_tile_server = null;
     private final ArrayList<String> m_spinner_val_remote_tile_server__items = new ArrayList<String>();
     private CustomSpinner.Adapter m_spinner_val_remote_tile_server__dataadapter = null;
-    private Button m_btn_stream_tiles_from_remote = null;
+    private DrawerHandle m_drawer_handle = null;
+    private ActionBarDrawerToggle m_drawerlayout_main__DrawerToggle = null;
 
     private final MBGLFragment mb_frag = new MBGLFragment();
 
@@ -264,10 +296,9 @@ public class MainActivity
         setContentView(R.layout.activity_main);
 
         //map UI objects to UI resources
-        m_drawerlayout = (DrawerLayout)findViewById(R.id.drawerlayout);
+        ButterKnife.bind(this);
+
         fixMinDrawerMargin(m_drawerlayout);
-        m_drawerlayout_content__main = (LinearLayout)findViewById(R.id.drawerlayout_content__main);
-        m_drawerlayout_content__drawer = findViewById(R.id.drawerlayout_content__drawer);
         m_drawerlayout_main__DrawerToggle = new ActionBarDrawerToggle(this, m_drawerlayout, R.string.open, R.string.close) {
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset) {
@@ -279,217 +310,23 @@ public class MainActivity
             }
         };
 
-        m_scvw_main = (ScrollView)findViewById(R.id.sv_main);
-
-        m_btn_sect__mbgl_nfo__expand = (Button)findViewById(R.id.btn_sect__mbgl_nfo__expand);
-        m_vw_sect_content__mbgl_nfo = (ExpandableRelativeLayout)findViewById(R.id.sect_content__mbgl_nfo);
-        m_rg_val_mvt_source_sel = (RadioGroup)findViewById(R.id.rg_val_mvt_source_sel);
-        m_edt_val_http_client_cfg__connect_timeout = (EditText)findViewById(R.id.edt_val_http_client_cfg__connect_timeout);
-        m_edt_val_http_client_cfg__read_timeout = (EditText)findViewById(R.id.edt_val_http_client_cfg__read_timeout);
-        m_edt_val_http_client_cfg__cache_size = (EditText)findViewById(R.id.edt_val_http_client_cfg__cache_size);
-        m_edt_val_http_client_cfg__max_requests_per_host = (EditText)findViewById(R.id.edt_val_http_client_cfg__max_requests_per_host);
-
-        m_sect__local_srvr_nfo = findViewById(R.id.sect__local_srvr_nfo);
-        m_tv_val_bin_ver = (TextView)findViewById(R.id.tv_val_bin_ver);
-        m_rb_val_provider_type_sel__postgis = (RadioButton)findViewById(R.id.rb_val_provider_type_sel__postgis);
-        m_rb_val_provider_type_sel__gpkg = (RadioButton)findViewById(R.id.rb_val_provider_type_sel__gpkg);
-        m_sect__postgis_provider_spec = (View)findViewById(R.id.sect__postgis_provider_spec);
-        m_rb_val_config_type_sel__local = (RadioButton)findViewById(R.id.rb_val_config_type_sel__local);
-        m_tv_lbl_config_type_sel__local__manage_files = (TextView)findViewById(R.id.tv_lbl_gpkg_provider_type_sel__manage_bundles);
-        m_rb_val_config_type_sel__remote = (RadioButton)findViewById(R.id.rb_val_config_type_sel__remote);
-        m_vw_config_sel_container__local = findViewById(R.id.postgis_provider_config_sel__local__container);
-        m_spinner_val_local_config = (CustomSpinner)findViewById(R.id.spinner_val_postgis_provider_local_config);
-        m_btn_config_sel_local__edit_file = (ImageButton)findViewById(R.id.btn_postgis_provider_config_sel_local__edit_file);
-        m_btn_config_sel_local_import__sdcard = (ImageButton)findViewById(R.id.btn_postgis_provider_config_sel_local_import__sdcard);
-//        m_btn_config_sel_local_import__googledrive = (ImageButton)findViewById(R.id.btn_postgis_provider_config_sel_local_import__googledrive);
-        m_vw_config_sel_container__remote = findViewById(R.id.postgis_provider_config_sel__remote__container);
-        m_edt_val_config_sel__remote = (EditText)findViewById(R.id.edt_val_postgis_provider_config_sel__remote);
-        m_btn_config_sel_remote_apply_changes = (Button)findViewById(R.id.btn_postgis_provider_config_sel_remote_apply_changes);
-        m_sect__gpkg_provider_spec = (View)findViewById(R.id.sect__gpkg_provider_spec);
-        m_spinner_val_gpkg_bundle = (CustomSpinner)findViewById(R.id.spinner_val_gpkg_provider_bundle);
-        m_spinner_val_gpkg_bundle_props = (CustomSpinner)findViewById(R.id.spinner_val_gpkg_provider_bundle_props);
-        m_tv_val_srvr_status = (TextView)findViewById(R.id.tv_val_srvr_status);
-        m_btn_srvr_ctrl = (Button)findViewById(R.id.btn_srvr_ctrl);
-        m_sect_content__item__srvr_console_output = findViewById(R.id.sect_content__item__srvr_console_output);
-        m_tv_tegola_console_output = (TextView)findViewById(R.id.tv_tegola_console_output);
-
-        m_sect__remote_srvr_nfo = findViewById(R.id.sect__remote_srvr_nfo);
-        m_spinner_val_remote_tile_server = (CustomSpinner)findViewById(R.id.spinner_val_remote_tile_server);
-        m_btn_stream_tiles_from_remote = (Button)findViewById(R.id.btn_stream_tiles_from_remote);
-
         //set up associated UI objects auxiliary objects if any - e.g. TAGs and data adapters
         m_spinner_val_local_config__dataadapter = new CustomSpinner.Adapter(this, m_spinner_val_local_config__items);
-        m_spinner_val_local_config.setAdapter(m_spinner_val_local_config__dataadapter);
+        m_spinner_postgis_local_config_sel.setAdapter(m_spinner_val_local_config__dataadapter);
         m_spinner_val_gpkg_bundle__dataadapter = new CustomSpinner.Adapter(this, m_spinner_val_gpkg_bundle__items);
-        m_spinner_val_gpkg_bundle.setAdapter(m_spinner_val_gpkg_bundle__dataadapter);
+        m_spinner_gpkg_bundle_sel.setAdapter(m_spinner_val_gpkg_bundle__dataadapter);
         m_spinner_val_gpkg_bundle_props__dataadapter = new CustomSpinner.Adapter(this, m_spinner_val_gpkg_bundle_props__items);
-        m_spinner_val_gpkg_bundle_props.setAdapter(m_spinner_val_gpkg_bundle_props__dataadapter);
+        m_spinner_gpkg_bundle_props_sel.setAdapter(m_spinner_val_gpkg_bundle_props__dataadapter);
         m_spinner_val_remote_tile_server__dataadapter = new CustomSpinner.Adapter(this, m_spinner_val_remote_tile_server__items);
         m_spinner_val_remote_tile_server.setAdapter(m_spinner_val_remote_tile_server__dataadapter);
 
-        m_btn_srvr_ctrl.setTag(R.id.TAG__SRVR_RUNNING, false);
+        m_btn_local_mvt_srvr_ctrl.setTag(R.id.TAG__SRVR_RUNNING, false);
 
         //associate listeners for user-UI-interaction
-        m_btn_sect__mbgl_nfo__expand.setOnClickListener(OnClickListener__btn_expandable_section);
-        m_rg_val_mvt_source_sel.setOnCheckedChangeListener(OnCheckedChangeListener__m_rg_val_mvt_source_sel);
-        m_edt_val_http_client_cfg__connect_timeout.setOnEditorActionListener(
-            (v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        );
-        m_edt_val_http_client_cfg__connect_timeout.setOnFocusChangeListener(
-            (v, hasFocus) -> {
-                if (!hasFocus) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
-            }
-        );
-        m_edt_val_http_client_cfg__read_timeout.setOnEditorActionListener(
-            (v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        );
-        m_edt_val_http_client_cfg__read_timeout.setOnFocusChangeListener(
-            (v, hasFocus) -> {
-                if (!hasFocus) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
-            }
-        );
-        m_edt_val_http_client_cfg__cache_size.setOnEditorActionListener(
-            (v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        );
-        m_edt_val_http_client_cfg__cache_size.setOnFocusChangeListener(
-            (v, hasFocus) -> {
-                if (!hasFocus) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
-            }
-        );
-        m_edt_val_http_client_cfg__max_requests_per_host.setOnEditorActionListener(
-            (v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        );
-        m_edt_val_http_client_cfg__max_requests_per_host.setOnFocusChangeListener(
-            (v, hasFocus) -> {
-                if (!hasFocus) {
-                    //validate_enable_install_button();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
-            }
-        );
-
-        m_rb_val_provider_type_sel__postgis.setOnCheckedChangeListener(OnCheckedChangeListener__m_rb_val_provider_type_sel__postgis);
-        m_rb_val_provider_type_sel__gpkg.setOnCheckedChangeListener(OnCheckedChangeListener__m_rb_val_provider_type_sel__gpkg);
-        m_rb_val_config_type_sel__local.setOnCheckedChangeListener(OnCheckedChangeListener__m_rb_val_config_type_sel__local);
         m_tv_lbl_config_type_sel__local__manage_files.setMovementMethod(LinkMovementMethod.getInstance());
         Spannable span__clickable_text__m_tv_lbl_config_type_sel__local__manage_files = (Spannable)m_tv_lbl_config_type_sel__local__manage_files.getText();
         span__clickable_text__m_tv_lbl_config_type_sel__local__manage_files.setSpan(ClickableSpan____m_tv_lbl_config_type_sel__local__manage_files, 0, span__clickable_text__m_tv_lbl_config_type_sel__local__manage_files.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        m_spinner_val_local_config.setOnItemSelectedListener(OnItemSelectedListener__m_spinner_val_config_sel_local);
-        m_btn_config_sel_local__edit_file.setOnClickListener(OnClickListener__m_btn_config_sel_local__edit_file);
-        m_btn_config_sel_local_import__sdcard.setOnClickListener(OnClickListener__m_btn_config_sel_local_import__sdcard);
 //        m_btn_config_sel_local_import__googledrive.setOnClickListener(OnClickListener__m_btn_config_sel_local_import__googledrive);
-        m_rb_val_config_type_sel__remote.setOnCheckedChangeListener(OnCheckedChangeListener__m_rb_val_config_type_sel__remote);
-        m_edt_val_config_sel__remote.setOnEditorActionListener(OnEditorActionListener__m_edt_val_config_sel__remote);
-        m_edt_val_config_sel__remote.setOnFocusChangeListener(OnFocusChangeListener__m_edt_val_config_sel__remote);
-        m_btn_config_sel_remote_apply_changes.setOnClickListener(OnClickListener__m_btn_config_sel_remote_apply_changes);
-        m_spinner_val_gpkg_bundle.setOnItemSelectedListener(OnItemSelectedListener__m_spinner_val_gpkg_bundle);
-        m_spinner_val_gpkg_bundle_props.setOnItemSelectedListener(OnItemSelectedListener__m_spinner_val_gpkg_bundle_config);
-        m_spinner_val_remote_tile_server.setOnItemSelectedListener(OnItemSelectedListener__m_spinner_val_remote_tile_server);
-        m_btn_srvr_ctrl.setOnClickListener(OnClickListener__m_btn_srvr_ctrl);
-
-        m_btn_stream_tiles_from_remote.setOnClickListener(
-            v -> {
-                if (m_btn_stream_tiles_from_remote.getText().toString().compareTo(getString(R.string.open_tile_stream)) == 0) {//cheap way for state control - state: STREAM_CLOSED
-                    String
-                        root_url = SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(),
-                        endpoint = "/capabilities";
-                    if (root_url.endsWith(".json")) {
-                        int i = root_url.lastIndexOf("/");
-                        endpoint = root_url.substring(i);
-                        root_url = root_url.substring(0, i);
-                    }
-                    final String final_root_url = root_url, final_endpoint = endpoint, final_url = final_root_url + final_endpoint;
-                    //validate url first!
-                    if (HTTP.isValidUrl(final_url)) {
-                        Log.d(TAG, "m_btn_stream_tiles_from_remote.onClick: root_url==\"" + final_root_url + "\"; endpoint==\"" + final_endpoint + "\"");
-                        if (!root_url.isEmpty() && !endpoint.isEmpty()) {
-                            Log.d(TAG, "m_btn_stream_tiles_from_remote.onClick: requesting capabilities from " + final_root_url);
-                            mvstate = MAPVIEW_STATE.OPENING_STREAM__REMOTE;
-                            new Handler().postDelayed(
-                                () -> m_controllerClient.mvt_server__rest_api__get_json(
-                                    final_root_url,
-                                    final_endpoint,
-                                    Constants.Strings.INTENT.ACTION.REQUEST.MVT_SERVER.REST_API.GET_JSON.EXTRA_KEY.PURPOSE.VALUE.LOAD_MAP.STRING
-                                ),
-                                50
-                            );
-                        }
-                    } else {
-                        mvstate = MAPVIEW_STATE.STREAM_CLOSED;
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
-                        alertDialogBuilder.setTitle("Cannot fetch from remote tile server!");
-                        alertDialogBuilder
-                            .setMessage("Malformed remote tile server URL: \"" + final_url + "\"")
-                            .setCancelable(false)
-                            .setPositiveButton(
-                                getString(R.string.OK),
-                                (dialog, id) -> dialog.dismiss()
-                            );
-                        AlertDialog alertDialog = alertDialogBuilder.create();
-                        alertDialog.show();
-                        return;
-                    }
-                    if (m_vw_sect_content__mbgl_nfo.isExpanded()) {
-                        m_vw_sect_content__mbgl_nfo.collapse();
-                        m_vw_sect_content__mbgl_nfo.setExpanded(false);
-                        reconcile_expandable_section(m_vw_sect_content__mbgl_nfo);
-                    }
-                } else {
-                    mbgl_map_stop();
-                    mvstate = MAPVIEW_STATE.STREAM_CLOSED;
-                    m_btn_stream_tiles_from_remote.setText(getString(R.string.open_tile_stream));
-                }
-            }
-        );
 
         //instantiate PersistentConfigSettingsManager singleton
         SharedPrefsManager.newInstance(this);
@@ -576,45 +413,42 @@ public class MainActivity
     protected void onResume() {
         Log.d(TAG, "onResume: entered");
         //now queue up initial automated UI actions
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //get mbgl config shared prefs
-                if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.getValue() == null) {
-                    Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_connect_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.toString(), BuildConfig.mbgl_http_connect_timeout));
-                    SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.setValue(BuildConfig.mbgl_http_connect_timeout);
-                }
-                m_edt_val_http_client_cfg__connect_timeout.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.getValue()));
-                if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.getValue() == null) {
-                    Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_read_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.toString(), BuildConfig.mbgl_http_read_timeout));
-                    SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.setValue(BuildConfig.mbgl_http_read_timeout);
-                }
-                m_edt_val_http_client_cfg__read_timeout.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.getValue()));
-                if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.getValue() == null) {
-                    Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_max_requests_per_host==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.toString(), BuildConfig.mbgl_http_max_requests_per_host));
-                    SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.setValue(BuildConfig.mbgl_http_max_requests_per_host);
-                }
-                m_edt_val_http_client_cfg__max_requests_per_host.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.getValue()));
-                if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.getValue() == null) {
-                    Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_cache_size==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.toString(), BuildConfig.mbgl_http_cache_size));
-                    SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.setValue(BuildConfig.mbgl_http_cache_size);
-                }
-                m_edt_val_http_client_cfg__cache_size.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.getValue()));
-
-                boolean tile_source_is_local = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
-                Log.d(TAG, String.format("onResume.async.runnable.run: boolean shared pref %s is: %b", SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.toString(), tile_source_is_local));
-                int rb_val_mvt_source_sel = (
-                    tile_source_is_local
-                        ? R.id.rb_val_mvt_source_sel__local
-                        : R.id.rb_val_mvt_source_sel__remote
-                );
-                m_rg_val_mvt_source_sel.check(rb_val_mvt_source_sel);
-
-                m_tv_tegola_console_output__scroll_max();
-
-                //adjust main scroll view (since expandable sections may or may not have been expanded/collapsed based on initial settings)
-                m_scvw_main__scroll_max();
+        new Handler().postDelayed(() -> {
+            //get mbgl config shared prefs
+            if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.getValue() == null) {
+                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_connect_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.toString(), BuildConfig.mbgl_http_connect_timeout));
+                SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.setValue(BuildConfig.mbgl_http_connect_timeout);
             }
+            m_edt_val_http_client_cfg__connect_timeout.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.getValue()));
+            if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.getValue() == null) {
+                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_read_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.toString(), BuildConfig.mbgl_http_read_timeout));
+                SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.setValue(BuildConfig.mbgl_http_read_timeout);
+            }
+            m_edt_val_http_client_cfg__read_timeout.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.getValue()));
+            if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.getValue() == null) {
+                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_max_requests_per_host==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.toString(), BuildConfig.mbgl_http_max_requests_per_host));
+                SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.setValue(BuildConfig.mbgl_http_max_requests_per_host);
+            }
+            m_edt_val_http_client_cfg__max_requests_per_host.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.getValue()));
+            if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.getValue() == null) {
+                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_cache_size==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.toString(), BuildConfig.mbgl_http_cache_size));
+                SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.setValue(BuildConfig.mbgl_http_cache_size);
+            }
+            m_edt_val_http_client_cfg__cache_size.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.getValue()));
+
+            boolean tile_source_is_local = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
+            Log.d(TAG, String.format("onResume.async.runnable.run: boolean shared pref %s is: %b", SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.toString(), tile_source_is_local));
+            int rb_val_mvt_source_sel = (
+                tile_source_is_local
+                    ? R.id.rb_mvt_local_tile_source_sel
+                    : R.id.rb_mvt_remote_tile_source_sel
+            );
+            m_rg_val_mvt_source_sel.check(rb_val_mvt_source_sel);
+
+            m_tv_tegola_console_output__scroll_max();
+
+            //adjust main scroll view (since expandable sections may or may not have been expanded/collapsed based on initial settings)
+            m_scvw_main__scroll_max();
         }, 50);
 
         super.onResume();
@@ -636,8 +470,8 @@ public class MainActivity
 
 
     //user-UI-interaction listeners...
-    //reaction to toggling expandable section
-    private final View.OnClickListener OnClickListener__btn_expandable_section = v -> {
+    @OnClick(R.id.btn_sect__mbgl_nfo__expand)
+    protected void handleClick__expand_section(View v) {
         ExpandableRelativeLayout expandable_section = null;
         switch (v.getId()) {
             case R.id.btn_sect__mbgl_nfo__expand:
@@ -657,40 +491,547 @@ public class MainActivity
             () -> reconcile_expandable_section(final_expandable_section),
             50
         );
-    };
+    }
 
-    private final RadioGroup.OnCheckedChangeListener OnCheckedChangeListener__m_rg_val_mvt_source_sel = (group, checkedId) -> {
-        Log.d(TAG, "m_rg_val_mvt_source_sel.onCheckedChanged: checkedId: " + checkedId);
-        boolean
-            want_local_tile_source = (checkedId == R.id.rb_val_mvt_source_sel__local),
-            setting_local_tile_source = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
-        Log.d(TAG, "m_rg_val_mvt_source_sel.onCheckedChanged: want_local_tile_source: " + want_local_tile_source + ", setting_local_tile_source: " + setting_local_tile_source);
-        if (want_local_tile_source != setting_local_tile_source) {
-            SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.setValue(want_local_tile_source);
-            setting_local_tile_source = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
-            Log.d(TAG, "m_rg_val_mvt_source_sel.onCheckedChanged: changed shared pref setting " + SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL + " value to: " + setting_local_tile_source);
+    //note that the validation (business logic) will be moved to the Model (MVP work-in-progress) but remains here for now even though it is not good architecture
+    @OnEditorAction(
+        {
+            R.id.edt_val_http_client_cfg__connect_timeout,
+            R.id.edt_val_http_client_cfg__read_timeout,
+            R.id.edt_val_http_client_cfg__cache_size,
+            R.id.edt_val_http_client_cfg__max_requests_per_host
         }
-        if (setting_local_tile_source) {//then get/update settings related to using local mvt server
-            //set srvr provider type (postGIS/geopackage) based on PersistentConfigSettingsManager.TM_PROVIDER__IS_GEOPACKAGE val
-            if (SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_PROVIDER__IS_GEOPACKAGE.getValue() == true) {
-                m_rb_val_provider_type_sel__gpkg.setChecked(true);
-            } else {
-                m_rb_val_provider_type_sel__postgis.setChecked(true);
-                //set srvr config selection type (local/remote) based on PersistentConfigSettingsManager.TM_CONFIG_TOML__IS_REMOTE val
-                if (SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_CONFIG_TOML__IS_REMOTE.getValue() == true) {
-                    m_rb_val_config_type_sel__remote.setChecked(true);
+    )
+    protected boolean handleEditorAction__mvt_client_http_config(TextView tv, int actionId, KeyEvent keyEvent) {
+        if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
+            int etid = tv.getId();
+            String s_val = tv.getText().toString().trim();
+            Integer kc = keyEvent != null ? keyEvent.getKeyCode() : null;
+            String keycode = kc != null ? String.valueOf(kc) : "<NO_KEY_PRESSED>";
+            Log.d(
+                TAG,
+                String.format(
+                    "handleEditorAction__mvt_client_http_config: handling %s action keyevent.keycode %s for edittext id %s",
+                    actionId == EditorInfo.IME_NULL
+                        ? "EditorInfo.IME_NULL"
+                        : "EditorInfo.IME_ACTION_DONE",
+                    kc != null ? String.valueOf(kc) : "<NO_KEY_PRESSED>",
+                    getResources().getResourceName(etid)
+                )
+            );
+            if (actionId == EditorInfo.IME_ACTION_DONE || (kc != null && kc == KeyEvent.KEYCODE_ENTER)) {
+                boolean isvalid = false;
+                int val = -1;
+                try {
+                    val = Integer.parseInt(s_val);
+                    isvalid = val >= 0;
+                } catch (NumberFormatException e) {}
+                Log.d(
+                    TAG,
+                    String.format(
+                        "handleEditorAction__mvt_client_http_config: %s condition for %s value %d",
+                        isvalid ? "valid-value(commit)" : "invalid-value",
+                        getResources().getResourceName(etid),
+                        val
+                    )
+                );
+                int default_val = -1;
+                SharedPrefsManager.INTEGER_SHARED_PREF integer_shared_pref = null;
+                switch (etid) {
+                    case R.id.edt_val_http_client_cfg__connect_timeout: {
+                        default_val = BuildConfig.mbgl_http_connect_timeout;
+                        integer_shared_pref = SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT;
+                        break;
+                    }
+                    case R.id.edt_val_http_client_cfg__read_timeout: {
+                        default_val = BuildConfig.mbgl_http_read_timeout;
+                        integer_shared_pref = SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT;
+                        break;
+                    }
+                    case R.id.edt_val_http_client_cfg__cache_size: {
+                        default_val = BuildConfig.mbgl_http_cache_size;
+                        integer_shared_pref = SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE;
+                        break;
+                    }
+                    case R.id.edt_val_http_client_cfg__max_requests_per_host: {
+                        default_val = BuildConfig.mbgl_http_max_requests_per_host;
+                        integer_shared_pref = SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST;
+                        break;
+                    }
+                }
+                if (isvalid)
+                    integer_shared_pref.setValue(val);
+                else
+                    tv.setText(String.valueOf(default_val));
+            }
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(tv.getWindowToken(), 0);
+        }
+        return false;   //do not consume event in order to allow Android to do default handling
+    }
+
+    @OnFocusChange(
+        {
+            R.id.edt_val_http_client_cfg__connect_timeout,
+            R.id.edt_val_http_client_cfg__read_timeout,
+            R.id.edt_val_http_client_cfg__cache_size,
+            R.id.edt_val_http_client_cfg__max_requests_per_host,
+            R.id.edt_postgis_remote_config_url
+        }
+    )
+    protected void handleFocusChange(View v, boolean hasFocus) {
+        Log.d(
+            TAG,
+            String.format(
+                "handleFocusChange: %s %s focus",
+                getResources().getResourceName(v.getId()),
+                hasFocus ? "got" : "lost"
+            )
+        );
+        if (!hasFocus) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        }
+    }
+
+    //Butterknife does not support OnCheckedChanged for RadioGroup, so we have to fall back to the version for individual radio buttons
+    @OnCheckedChanged({R.id.rb_mvt_local_tile_source_sel, R.id.rb_mvt_remote_tile_source_sel})
+    protected void handleCheckedChange__mvt_client_tile_source__local_or_remote(CompoundButton rb, boolean checked) {
+        if (checked) {
+            int checkedId = rb.getId();
+            boolean
+                want_local_tile_source = (checkedId == R.id.rb_mvt_local_tile_source_sel),
+                setting_local_tile_source = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
+            if (want_local_tile_source != setting_local_tile_source) {
+                SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.setValue(want_local_tile_source);
+                setting_local_tile_source = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
+                Log.d(TAG, "handleCheckedChange__mvt_client_tile_source__local_or_remote: changed shared pref setting " + SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL + " value to: " + setting_local_tile_source);
+            }
+            if (setting_local_tile_source) {//then get/update settings related to using local mvt server
+                //set srvr provider type (postGIS/geopackage) based on PersistentConfigSettingsManager.TM_PROVIDER__IS_GEOPACKAGE val
+                if (SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_PROVIDER__IS_GEOPACKAGE.getValue() == true) {
+                    m_rb_gpkg_provider_type_sel.setChecked(true);
                 } else {
-                    m_rb_val_config_type_sel__local.setChecked(true);
+                    m_rb_postgis_provider_type_sel.setChecked(true);
+                    //set srvr config selection type (local/remote) based on PersistentConfigSettingsManager.TM_CONFIG_TOML__IS_REMOTE val
+                    if (SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_CONFIG_TOML__IS_REMOTE.getValue() == true) {
+                        m_rb_postgis_remote_config_type_sel.setChecked(true);
+                    } else {
+                        m_rb_postgis_local_config_type_sel.setChecked(true);
+                    }
+                }
+            } else //get/update settings relatde to remote tile mvt server
+                synchronize_spinner_remote_tile_server();
+
+            m_sect__remote_srvr_nfo.setVisibility(want_local_tile_source ? View.GONE : View.VISIBLE);
+            m_sect__local_srvr_nfo.setVisibility(want_local_tile_source ? View.VISIBLE : View.GONE);
+            m_tv_tegola_console_output__scroll_max();
+            m_scvw_main__scroll_max();
+        }
+    }
+
+    @OnCheckedChanged({R.id.rb_postgis_provider_type_sel, R.id.rb_gpkg_provider_type_sel})
+    protected void handleCheckedChange__local_mvt_srvr_provider_type(CompoundButton rb, boolean checked) {
+        if (checked) {
+            int checkedId = rb.getId();
+            switch (checkedId) {
+                case R.id.rb_postgis_provider_type_sel: {
+                    m_sect__gpkg_provider_spec.setVisibility(View.GONE);
+                    m_sect__postgis_provider_spec.setVisibility(View.VISIBLE);
+                    SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_PROVIDER__IS_GEOPACKAGE.setValue(false);
+                    break;
+                }
+                case R.id.rb_gpkg_provider_type_sel: {
+                    m_sect__postgis_provider_spec.setVisibility(View.GONE);
+                    m_sect__gpkg_provider_spec.setVisibility(View.VISIBLE);
+                    SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_PROVIDER__IS_GEOPACKAGE.setValue(true);
+                    synchronize_spinner_gpkg_bundle();
+                    synchronize_spinner_gpkg_bundle_props();
+                    break;
                 }
             }
-        } else //get/update settings relatde to remote tile mvt server
-            synchronize_spinner_remote_tile_server();
+        }
+    }
 
-        m_sect__remote_srvr_nfo.setVisibility(want_local_tile_source ? View.GONE : View.VISIBLE);
-        m_sect__local_srvr_nfo.setVisibility(want_local_tile_source ? View.VISIBLE : View.GONE);
-        m_tv_tegola_console_output__scroll_max();
-        m_scvw_main__scroll_max();
-    };
+    @OnCheckedChanged({R.id.rb_postgis_local_config_type_sel, R.id.rb_postgis_remote_config_type_sel})
+    protected void handleCheckedChange__local_mvt_srvr_postgis_config_type(CompoundButton rb, boolean checked) {
+        if (checked) {
+            int checkedId = rb.getId();
+            switch (checkedId) {
+                case R.id.rb_postgis_local_config_type_sel: {
+                    boolean sdcardmounted = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+                    m_btn_postgis_local_config_import__sdcard.setBackgroundColor(sdcardmounted ? ContextCompat.getColor(getApplicationContext(), android.R.color.holo_green_light) : ContextCompat.getColor(getApplicationContext(), android.R.color.holo_red_dark));
+                    m_btn_postgis_local_config_import__sdcard.setEnabled(sdcardmounted);
+                    m_vw_postgis_remote_config__container.setVisibility(View.GONE);
+                    m_vw_postgis_local_config_sel__container.setVisibility(View.VISIBLE);
+                    SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_CONFIG_TOML__IS_REMOTE.setValue(false);
+                    synchronize_spinner_local_config();
+                    break;
+                }
+                case R.id.rb_postgis_remote_config_type_sel: {
+                    m_vw_postgis_local_config_sel__container.setVisibility(View.GONE);
+                    m_vw_postgis_remote_config__container.setVisibility(View.VISIBLE);
+                    SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_CONFIG_TOML__IS_REMOTE.setValue(true);
+                    break;
+                }
+            }
+        }
+    }
+
+    @OnClick(R.id.btn_postgis_local_config_import__sdcard)
+    protected void handleClick__local_mvt_srvr_postgis_local_config__import(View v) {
+        import_config_toml__from_sdcard();
+    }
+
+    @OnItemSelected(R.id.spinner_postgis_local_config_sel)
+    protected void handleItemSelected__local_mvt_srvr_postgis_local_config(AdapterView<?> adapter, View view, int position, long id) {
+        String s_sel_val = adapter.getItemAtPosition(position).toString();
+        Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
+
+        String s_cached_config_sel__local_val = SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue();
+        Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value is \"" + s_cached_config_sel__local_val + "\"");
+
+        boolean no_config_files = (s_sel_val == null || s_sel_val.compareTo(getString(R.string.srvr_config_type__local__no_config_files_found)) == 0);
+        if (no_config_files) {
+            Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: no-config-files condition!");
+            if (!s_cached_config_sel__local_val.isEmpty()) {
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value (currently \"" + s_cached_config_sel__local_val + "\")");
+                Toast.makeText(getApplicationContext(), "Clearing setting value for local config toml file selection since there are none available", Toast.LENGTH_SHORT).show();
+                SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.setValue("");
+            } else {
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_config_sel__local_val + "\")");
+            }
+
+            //edit button obviously not applicable in this case
+            m_btn_config_sel_local__edit_file.setVisibility(View.GONE);
+            m_btn_config_sel_local__edit_file.setEnabled(false);
+            //and neither is MVT srvr control (start/stop) button
+            m_btn_local_mvt_srvr_ctrl.setEnabled(false);
+
+            //finally display alertdialog notifying user that tegola cannot be used until a config file is imported
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
+            alertDialogBuilder.setTitle(getString(R.string.srvr_config_type__local__no_config_files_found));
+            alertDialogBuilder
+                    .setMessage(getString(R.string.srvr_config_type__local__no_config_files_found__alert_msg))
+                    .setCancelable(false)
+                    .setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                        }
+                    });
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
+        } else {
+            //first, update shared pref val as necessary - does sel value differ from cached?
+            if (s_cached_config_sel__local_val.compareTo(s_sel_val) != 0) {
+                Toast.makeText(getApplicationContext(), "Saving new setting value for local config toml file \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
+                //now update shared pref
+                SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.setValue(s_sel_val);
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value from \"" + s_cached_config_sel__local_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\"");
+            } else {
+                //no change to shared pref val
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
+            }
+
+            //now update m_btn_config_sel_local__edit_file UI based on existence of current local config toml file selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue())
+            File file = new File(getFilesDir().getPath() + "/" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue());
+            m_btn_config_sel_local__edit_file.setVisibility(file.exists() ? View.VISIBLE : View.GONE);
+            m_btn_config_sel_local__edit_file.setEnabled(file.exists());
+            //and same MVT srvr control (start/stop) button
+            m_btn_local_mvt_srvr_ctrl.setEnabled(file.exists());
+        }
+    }
+
+    @OnClick(R.id.btn_postgis_local_config_sel__edit_file)
+    protected void handleClick__local_mvt_srvr_postgis_local_config__edit(View v) {
+        edit_local_config_file(SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue());
+    }
+
+    @OnEditorAction(R.id.edt_postgis_remote_config_url)
+    protected boolean handleEditorAction__local_mvt_srvr_postgis_remote_config_url(TextView tv, int actionId, KeyEvent keyEvent) {
+        if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL)
+            validate__m_edt_val_config_sel__remote();
+        return false;
+    }
+
+    @OnClick(R.id.btn_postgis_remote_config_url__apply_changes)
+    protected void handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes(View v) {
+        String s_remote_config_toml_sel_normalized = m_edt_postgis_remote_config_url.getText().toString();
+        Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: triggered remote config change with value " + (s_remote_config_toml_sel_normalized == null ? "null" : "\"" + s_remote_config_toml_sel_normalized + "\""));
+        if (s_remote_config_toml_sel_normalized == null) {
+            Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: normalizing remote config change (null) to \"\"");
+            s_remote_config_toml_sel_normalized = "";
+        }
+        String s_old_config_sel__remote_val = SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue();
+        Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value is \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\"");
+        if (s_old_config_sel__remote_val.compareTo(s_remote_config_toml_sel_normalized) != 0) {
+            if (s_remote_config_toml_sel_normalized.isEmpty())
+                Toast.makeText(getApplicationContext(), "Clearing remote config toml file selection", Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(getApplicationContext(), "Saving new setting value for remote config toml file https://" + s_remote_config_toml_sel_normalized, Toast.LENGTH_SHORT).show();
+            SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.setValue(s_remote_config_toml_sel_normalized);
+            Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " value from \"" + s_old_config_sel__remote_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\"");
+            m_btn_postgis_remote_config_url__apply_changes.setEnabled(false);
+        } else {
+            //no change to share pref val - do nothing other than log
+            Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\") since normalized new value (\"" + s_remote_config_toml_sel_normalized + "\") is no different");
+        }
+        synchronize_edittext_config_remote();
+    }
+
+    @OnItemSelected(R.id.spinner_gpkg_bundle_sel)
+    protected void handleItemSelected__local_mvt_srvr_gpkgbundle(AdapterView<?> adapter, View view, int position, long id) {
+        String s_sel_val = adapter.getItemAtPosition(position).toString();
+        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
+
+        String s_cached_gpkg_bundle_val = SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue();
+        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_val + "\"");
+
+        boolean no_gpkg_bundles = (s_sel_val == null || s_sel_val.compareTo(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed)) == 0);
+        if (no_gpkg_bundles) {
+            Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: no-gpkg-bundles condition!");
+            if (!s_cached_gpkg_bundle_val.isEmpty()) {
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_val + "\")");
+                Toast.makeText(getApplicationContext(), "Clearing setting value for geopackage-bundle selection since there are none installed", Toast.LENGTH_SHORT).show();
+                SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.setValue("");
+            } else {
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_val + "\")");
+            }
+
+            m_btn_local_mvt_srvr_ctrl.setEnabled(false);
+
+            //finally display alertdialog notifying user that tegola cannot be used until a gpkg-bundle is installed
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
+            alertDialogBuilder.setTitle(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed));
+            alertDialogBuilder
+                    .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed__alert_msg))
+                    .setCancelable(false)
+                    .setNegativeButton(
+                            getString(R.string.cancel),
+                            (dialog, id1) -> dialog.dismiss()
+                    )
+                    .setPositiveButton(
+                            getString(R.string.OK),
+                            (dialog, id12) -> {
+                                startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
+                                dialog.dismiss();
+                            }
+                    );
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
+        } else {
+            //first, update shared pref val as necessary - does sel value differ from cached?
+            if (s_cached_gpkg_bundle_val.compareTo(s_sel_val) != 0) {
+                Toast.makeText(getApplicationContext(), "Saving new setting value for geopackage-bundle \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
+                //now update shared pref
+                SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.setValue(s_sel_val);
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\"");
+            } else {
+                //no change to shared pref val
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
+            }
+
+            //now update UI based on existence of current local geopackage-bundle selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue())
+            File f_gpkg_bundles_root_dir = null;
+            try {
+                f_gpkg_bundles_root_dir = GPKG.Local.F_GPKG_BUNDLE_ROOT_DIR.getInstance(getApplicationContext());
+                File f_gpkg_bundle = new File(f_gpkg_bundles_root_dir, SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue());
+                //and same MVT srvr control (start/stop) button
+                m_btn_local_mvt_srvr_ctrl.setEnabled(f_gpkg_bundle.exists());
+                if (f_gpkg_bundle.exists())
+                    synchronize_spinner_gpkg_bundle_props();
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @OnItemSelected(R.id.spinner_gpkg_bundle_props_sel)
+    protected void handleItemSelected__local_mvt_srvr_gpkgbundle_props(AdapterView<?> adapter, View view, int position, long id) {
+        String s_sel_val = adapter.getItemAtPosition(position).toString();
+        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
+
+        String s_cached_gpkg_bundle_config_val = SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue();
+        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_config_val + "\"");
+
+        boolean no_gpkg_bundle_cfg = (s_sel_val == null);
+        if (no_gpkg_bundle_cfg) {
+            Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: no-gpkg-no_gpkg_bundle_cfg condition!");
+            if (!s_cached_gpkg_bundle_config_val.isEmpty()) {
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_config_val + "\")");
+                Toast.makeText(getApplicationContext(), "Clearing setting value for geopackage-bundle config selection since there are none installed", Toast.LENGTH_SHORT).show();
+                SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.setValue("");
+            } else {
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_config_val + "\")");
+            }
+
+            m_btn_local_mvt_srvr_ctrl.setEnabled(false);
+
+            //finally display alertdialog notifying user that tegola cannot be used until a gpkg-bundle is installed
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
+            alertDialogBuilder.setTitle(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundle_props_installed));
+            alertDialogBuilder
+                    .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundle_configs_installed__alert_msg))
+                    .setCancelable(false)
+                    .setNegativeButton(
+                            getString(R.string.cancel),
+                            (dialog, id1) -> dialog.dismiss()
+                    )
+                    .setPositiveButton(
+                            getString(R.string.OK),
+                            (dialog, id12) -> {
+                                startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
+                                dialog.dismiss();
+                            }
+                    );
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
+        } else {
+            //first, update shared pref val as necessary - does sel value differ from cached?
+            if (s_cached_gpkg_bundle_config_val.compareTo(s_sel_val) != 0) {
+                Toast.makeText(getApplicationContext(), "Saving new setting value for geopackage-bundle config \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
+                //now update shared pref
+                SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.setValue(s_sel_val);
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_config_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\"");
+            } else {
+                //no change to shared pref val
+                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
+            }
+
+            //now update UI based on existence of current local geopackage-bundle config selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue())
+            File f_gpkg_bundle_dir = null;
+            try {
+                f_gpkg_bundle_dir = new File(GPKG.Local.F_GPKG_BUNDLE_ROOT_DIR.getInstance(getApplicationContext()), SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue());
+                File[] f_gpkg_bundle_props = f_gpkg_bundle_dir.listFiles((dir, name) -> name.endsWith(".properties"));
+                //and same MVT srvr control (start/stop) button
+                m_btn_local_mvt_srvr_ctrl.setEnabled(f_gpkg_bundle_props.length > 0);
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @OnItemSelected(R.id.spinner_remote_tile_server_sel)
+    protected void handleItemSelected__remote_mvt_srvr(AdapterView<?> adapter, View view, int position, long id) {
+        String s_sel_val = adapter.getItemAtPosition(position).toString();
+        Log.d(TAG, String.format("handleItemSelected_remotetileserver: triggered item selection @ position %d with value %s", position, (s_sel_val == null ? "null" : "\"" + s_sel_val + "\"")));
+
+        String s_cached_sel_canon_remote_tile_server = SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue();
+        Log.d(TAG, String.format("handleItemSelected_remotetileserver: shared pref setting %s current value is \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
+
+        boolean no_remote_tile_srvr_sel = (s_sel_val == null);
+        if (no_remote_tile_srvr_sel) {
+            Log.d(TAG, "handleItemSelected_remotetileserver: no_remote_tile_srvr_sel condition!");
+            if (!s_cached_sel_canon_remote_tile_server.isEmpty()) {
+                Log.d(TAG, String.format("handleItemSelected_remotetileserver: clearing shared pref setting %s value (currently \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
+                Toast.makeText(getApplicationContext(), "Clearing setting value for canonical remote tile server selection since there are none available", Toast.LENGTH_SHORT).show();
+                SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.setValue("");
+            } else {
+                Log.d(TAG, String.format("handleItemSelected_remotetileserver: skipping change to shared pref setting %s since it is already cleared (value is \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
+            }
+
+            m_btn_stream_tiles_from_remote.setEnabled(false);
+
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
+            alertDialogBuilder.setTitle(getString(R.string.no_valid_canonical_remote_tile_server_urls_found));
+            alertDialogBuilder
+                    .setMessage(getString(R.string.no_valid_canonical_remote_tile_server_urls_found__alert_msg))
+                    .setCancelable(false)
+                    .setNeutralButton(
+                            getString(R.string.OK),
+                            (dialog, id1) -> dialog.dismiss()
+                    );
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
+        } else {
+            //first, update shared pref val as necessary - does sel value differ from cached?
+            if (s_cached_sel_canon_remote_tile_server.compareTo(s_sel_val) != 0) {
+                Toast.makeText(getApplicationContext(), String.format("Saving new setting value for remote tile server \"%s\" selection", s_sel_val), Toast.LENGTH_SHORT).show();
+                //now update shared pref
+                SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.setValue(s_sel_val);
+                Log.d(TAG, String.format("handleItemSelected_remotetileserver: changed setting %s value from \"%s\" to \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server, SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue()));
+            } else {
+                //no change to shared pref val
+                Log.d(TAG, String.format("handleItemSelected_remotetileserver: skipping change to shared pref setting %s value (\"%s\") since new value (\"%s\") is no different", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(), s_sel_val));
+            }
+
+            m_btn_stream_tiles_from_remote.setEnabled(true);
+        }
+    }
+
+    @OnClick(R.id.btn_local_mvt_srvr_ctrl)
+    protected void handleClick__local_mvt_srvr__ctrl(View v) {
+        Button btn_srvr_ctrl = (Button)v;
+        Boolean srvr_started = (Boolean)btn_srvr_ctrl.getTag(R.id.TAG__SRVR_RUNNING);
+        if (srvr_started == null || !srvr_started) {
+            start_mvt_server();
+            if (m_vw_sect_content__mbgl_nfo.isExpanded()) {
+                m_vw_sect_content__mbgl_nfo.collapse();
+                m_vw_sect_content__mbgl_nfo.setExpanded(false);
+                reconcile_expandable_section(m_vw_sect_content__mbgl_nfo);
+            }
+        } else {
+            stop_mvt_server();
+        }
+    }
+
+    @OnClick(R.id.btn_remote_mvt_srvr__open_stream)
+    protected void handleClick__remote_mvt_srvr__open_stream(View v) {
+        if (m_btn_stream_tiles_from_remote.getText().toString().compareTo(getString(R.string.open_tile_stream)) == 0) {//cheap way for state control - state: STREAM_CLOSED
+            String
+                    root_url = SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(),
+                    endpoint = "/capabilities";
+            if (root_url.endsWith(".json")) {
+                int i = root_url.lastIndexOf("/");
+                endpoint = root_url.substring(i);
+                root_url = root_url.substring(0, i);
+            }
+            final String final_root_url = root_url, final_endpoint = endpoint, final_url = final_root_url + final_endpoint;
+            //validate url first!
+            if (HTTP.isValidUrl(final_url)) {
+                Log.d(TAG, "handleClick__remote_mvt_srvr__open_stream: root_url==\"" + final_root_url + "\"; endpoint==\"" + final_endpoint + "\"");
+                if (!root_url.isEmpty() && !endpoint.isEmpty()) {
+                    Log.d(TAG, "handleClick__remote_mvt_srvr__open_stream: requesting capabilities from " + final_root_url);
+                    mvstate = MAPVIEW_STATE.OPENING_STREAM__REMOTE;
+                    new Handler().postDelayed(
+                            () -> m_controllerClient.mvt_server__rest_api__get_json(
+                                    final_root_url,
+                                    final_endpoint,
+                                    Constants.Strings.INTENT.ACTION.REQUEST.MVT_SERVER.REST_API.GET_JSON.EXTRA_KEY.PURPOSE.VALUE.LOAD_MAP.STRING
+                            ),
+                            50
+                    );
+                }
+            } else {
+                mvstate = MAPVIEW_STATE.STREAM_CLOSED;
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
+                alertDialogBuilder.setTitle("Cannot fetch from remote tile server!");
+                alertDialogBuilder
+                        .setMessage("Malformed remote tile server URL: \"" + final_url + "\"")
+                        .setCancelable(false)
+                        .setPositiveButton(
+                                getString(R.string.OK),
+                                (dialog, id) -> dialog.dismiss()
+                        );
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
+                return;
+            }
+            if (m_vw_sect_content__mbgl_nfo.isExpanded()) {
+                m_vw_sect_content__mbgl_nfo.collapse();
+                m_vw_sect_content__mbgl_nfo.setExpanded(false);
+                reconcile_expandable_section(m_vw_sect_content__mbgl_nfo);
+            }
+        } else {
+            mbgl_map_stop();
+            mvstate = MAPVIEW_STATE.STREAM_CLOSED;
+            m_btn_stream_tiles_from_remote.setText(getString(R.string.open_tile_stream));
+        }
+    }
 
     private void synchronize_spinner_remote_tile_server() {
         //1. enumerate canonical remote servers in shared prefs - if empty, then set from resources
@@ -741,26 +1082,6 @@ public class MainActivity
         m_spinner_val_remote_tile_server__dataadapter.notifyDataSetChanged();
     }
 
-    //reaction to postGIS provider-type selection - display all postGIS config selection UI and update shared prefs to reflect selection
-    private final CompoundButton.OnCheckedChangeListener OnCheckedChangeListener__m_rb_val_provider_type_sel__postgis = (compoundButton, checked) -> {
-        if (checked) {
-            m_sect__gpkg_provider_spec.setVisibility(View.GONE);
-            m_sect__postgis_provider_spec.setVisibility(View.VISIBLE);
-            SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_PROVIDER__IS_GEOPACKAGE.setValue(false);
-        }
-    };
-
-    //reaction to gpkg provider-type selection - display all gpkg bundle selection UI and update shared prefs to reflect selection
-    private final CompoundButton.OnCheckedChangeListener OnCheckedChangeListener__m_rb_val_provider_type_sel__gpkg = (compoundButton, checked) -> {
-        if (checked) {
-            m_sect__postgis_provider_spec.setVisibility(View.GONE);
-            m_sect__gpkg_provider_spec.setVisibility(View.VISIBLE);
-            SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_PROVIDER__IS_GEOPACKAGE.setValue(true);
-            synchronize_spinner_gpkg_bundle();
-            synchronize_spinner_gpkg_bundle_props();
-        }
-    };
-
     private void synchronize_spinner_gpkg_bundle() {
         //1. enumerate geopackage-bundles and display results in spinner (drop-down)
         File f_gpkg_bundles_root_dir = null;
@@ -774,12 +1095,12 @@ public class MainActivity
         }
         File[] f_gpkg_bundles_root_dir_files = f_gpkg_bundles_root_dir.listFiles();
 
-        //2.1 remove current entries from m_spinner_val_gpkg_bundle dataAdapter
+        //2.1 remove current entries from m_spinner_gpkg_bundle_sel dataAdapter
         Log.d(TAG, "synchronize_spinner_gpkg_bundle: clearing spinner items");
         m_spinner_val_gpkg_bundle__items.clear();
 
         if (f_gpkg_bundles_root_dir_files.length > 0) {//found gpkg bundles
-            //2.2 add found geopackage bundle names into m_spinner_val_gpkg_bundle dataAdapter
+            //2.2 add found geopackage bundle names into m_spinner_gpkg_bundle_sel dataAdapter
             for (int i = 0; i < f_gpkg_bundles_root_dir_files.length; i++) {
                 File f_gpkg_bundle_candidate = f_gpkg_bundles_root_dir_files[i];
                 final String name = f_gpkg_bundle_candidate.getName();
@@ -810,7 +1131,7 @@ public class MainActivity
         }
 
         //4. commit changes to spinner to allow for listener to react
-        m_spinner_val_gpkg_bundle.setSelection(i_sel_pos);
+        m_spinner_gpkg_bundle_sel.setSelection(i_sel_pos);
         m_spinner_val_gpkg_bundle__dataadapter.notifyDataSetChanged();
     }
 
@@ -869,22 +1190,9 @@ public class MainActivity
         }
 
         //4. commit changes to spinner to allow for listener to react
-        m_spinner_val_gpkg_bundle_props.setSelection(i_sel_pos);
+        m_spinner_gpkg_bundle_props_sel.setSelection(i_sel_pos);
         m_spinner_val_gpkg_bundle_props__dataadapter.notifyDataSetChanged();
     }
-
-    //reaction to local config-type selection - display all local config selection UI and update shared prefs to reflect selection
-    private final CompoundButton.OnCheckedChangeListener OnCheckedChangeListener__m_rb_val_config_type_sel__local = (compoundButton, checked) -> {
-        if (checked) {
-            boolean sdcardmounted = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
-            m_btn_config_sel_local_import__sdcard.setBackgroundColor(sdcardmounted ? ContextCompat.getColor(getApplicationContext(), android.R.color.holo_green_light) : ContextCompat.getColor(getApplicationContext(), android.R.color.holo_red_dark));
-            m_btn_config_sel_local_import__sdcard.setEnabled(sdcardmounted);
-            m_vw_config_sel_container__remote.setVisibility(View.GONE);
-            m_vw_config_sel_container__local.setVisibility(View.VISIBLE);
-            SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_CONFIG_TOML__IS_REMOTE.setValue(false);
-            synchronize_spinner_local_config();
-        }
-    };
 
     private final ClickableSpan ClickableSpan____m_tv_lbl_config_type_sel__local__manage_files = new ClickableSpan() {
         @Override
@@ -892,79 +1200,6 @@ public class MainActivity
             startActivityForResult(new Intent(MainActivity.this, ManageGpkgBundlesActivity.class), REQUEST_CODES.REQUEST_CODE__MANAGE_GPKG_BUNDLES);
         }
     };
-
-    //user selects a local config file selection from spinner - synchronizes selection with shared prefs
-    private final AdapterView.OnItemSelectedListener OnItemSelectedListener__m_spinner_val_config_sel_local = new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> adapter, View view, int position, long id) {
-            String s_sel_val = adapter.getItemAtPosition(position).toString();
-            Log.d(TAG, "OnItemSelectedListener__m_spinner_val_config_sel_local.onItemSelected: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
-
-            String s_cached_config_sel__local_val = SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue();
-            Log.d(TAG, "OnItemSelectedListener__m_spinner_val_config_sel_local.onItemSelected: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.toString() + " current value is \"" + s_cached_config_sel__local_val + "\"");
-
-            boolean no_config_files = (s_sel_val == null || s_sel_val.compareTo(getString(R.string.srvr_config_type__local__no_config_files_found)) == 0);
-            if (no_config_files) {
-                Log.d(TAG, "OnItemSelectedListener__m_spinner_val_config_sel_local.onItemSelected: no-config-files condition!");
-                if (!s_cached_config_sel__local_val.isEmpty()) {
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_config_sel_local.onItemSelected: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.toString() + " value (currently \"" + s_cached_config_sel__local_val + "\")");
-                    Toast.makeText(getApplicationContext(), "Clearing setting value for local config toml file selection since there are none available", Toast.LENGTH_SHORT).show();
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.setValue("");
-                } else {
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_config_sel_local.onItemSelected: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_config_sel__local_val + "\")");
-                }
-
-                //edit button obviously not applicable in this case
-                m_btn_config_sel_local__edit_file.setVisibility(View.GONE);
-                m_btn_config_sel_local__edit_file.setEnabled(false);
-                //and neither is MVT srvr control (start/stop) button
-                m_btn_srvr_ctrl.setEnabled(false);
-
-                //finally display alertdialog notifying user that tegola cannot be used until a config file is imported
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
-                alertDialogBuilder.setTitle(getString(R.string.srvr_config_type__local__no_config_files_found));
-                alertDialogBuilder
-                        .setMessage(getString(R.string.srvr_config_type__local__no_config_files_found__alert_msg))
-                        .setCancelable(false)
-                        .setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.dismiss();
-                            }
-                        });
-                AlertDialog alertDialog = alertDialogBuilder.create();
-                alertDialog.show();
-            } else {
-                //first, update shared pref val as necessary - does sel value differ from cached?
-                if (s_cached_config_sel__local_val.compareTo(s_sel_val) != 0) {
-                    Toast.makeText(getApplicationContext(), "Saving new setting value for local config toml file \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
-                    //now update shared pref
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.setValue(s_sel_val);
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_config_sel_local.onItemSelected: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.toString() + " value from \"" + s_cached_config_sel__local_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue() + "\"");
-                } else {
-                    //no change to shared pref val
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_config_sel_local.onItemSelected: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
-                }
-
-                //now update m_btn_config_sel_local__edit_file UI based on existence of current local config toml file selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue())
-                File file = new File(getFilesDir().getPath() + "/" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue());
-                m_btn_config_sel_local__edit_file.setVisibility(file.exists() ? View.VISIBLE : View.GONE);
-                m_btn_config_sel_local__edit_file.setEnabled(file.exists());
-                //and same MVT srvr control (start/stop) button
-                m_btn_srvr_ctrl.setEnabled(file.exists());
-            }
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> adapter) {
-            Toast.makeText(getApplicationContext(), "Cleared local config toml file selection", Toast.LENGTH_SHORT).show();
-            //disable/hide m_btn_config_sel_local__edit_file
-            m_btn_config_sel_local__edit_file.setVisibility(View.GONE);
-            m_btn_config_sel_local__edit_file.setEnabled(false);
-        }
-    };
-
-    //user clicks button to edit/open/view selected local config file selection
-    private final View.OnClickListener OnClickListener__m_btn_config_sel_local__edit_file = v -> edit_local_config_file(SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue());
 
     private void edit_local_config_file(@NonNull final String config_filename) {
         File f_config_toml = new File(getFilesDir().getPath() + "/" + config_filename);
@@ -985,8 +1220,6 @@ public class MainActivity
         }
     }
 
-    //user clicks button to initiate import config toml files from sdcard
-    private final View.OnClickListener OnClickListener__m_btn_config_sel_local_import__sdcard = v -> import_config_toml__from_sdcard();
     private void import_config_toml__from_sdcard() {
         try {
             Intent intent_get_file_content = new Intent(Intent.ACTION_GET_CONTENT);
@@ -1016,58 +1249,6 @@ public class MainActivity
 //        }
 //    }
 
-
-    //reaction to srvr remote config-type selection - display all remote config selection UI and update shared prefs to reflect selection
-    private final CompoundButton.OnCheckedChangeListener OnCheckedChangeListener__m_rb_val_config_type_sel__remote = (compoundButton, checked) -> {
-        if (checked) {
-            m_vw_config_sel_container__local.setVisibility(View.GONE);
-            m_vw_config_sel_container__remote.setVisibility(View.VISIBLE);
-            SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_CONFIG_TOML__IS_REMOTE.setValue(true);
-            synchronize_edittext_config_remote();
-        }
-    };
-
-    //reaction to changing remote config URL value - user must press enter in editor or switch focus to another control to register to app that a pending change has occurred
-    private final TextView.OnEditorActionListener OnEditorActionListener__m_edt_val_config_sel__remote = (textView, actionId, keyEvent) -> {
-        if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
-            validate__m_edt_val_config_sel__remote();
-            return true;
-        } else
-            return false;
-    };
-    private final TextView.OnFocusChangeListener OnFocusChangeListener__m_edt_val_config_sel__remote = (v, hasFocus) -> {
-        if (!hasFocus)
-            validate__m_edt_val_config_sel__remote();
-    };
-
-    //reaction to when user applies changes to remote config URL
-    private final View.OnClickListener OnClickListener__m_btn_config_sel_remote_apply_changes = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            String s_remote_config_toml_sel_normalized = m_edt_val_config_sel__remote.getText().toString();
-            Log.d(TAG, "m_btn_config_sel_remote_apply_changes.setOnClickListener: triggered remote config change with value " + (s_remote_config_toml_sel_normalized == null ? "null" : "\"" + s_remote_config_toml_sel_normalized + "\""));
-            if (s_remote_config_toml_sel_normalized == null) {
-                Log.d(TAG, "m_btn_config_sel_remote_apply_changes.setOnClickListener: normalizing remote config change (null) to \"\"");
-                s_remote_config_toml_sel_normalized = "";
-            }
-            String s_old_config_sel__remote_val = SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue();
-            Log.d(TAG, "m_btn_config_sel_remote_apply_changes.setOnClickListener: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.toString() + " current value is \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue() + "\"");
-            if (s_old_config_sel__remote_val.compareTo(s_remote_config_toml_sel_normalized) != 0) {
-                if (s_remote_config_toml_sel_normalized.isEmpty())
-                    Toast.makeText(getApplicationContext(), "Clearing remote config toml file selection", Toast.LENGTH_SHORT).show();
-                else
-                    Toast.makeText(getApplicationContext(), "Saving new setting value for remote config toml file https://" + s_remote_config_toml_sel_normalized, Toast.LENGTH_SHORT).show();
-                SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.setValue(s_remote_config_toml_sel_normalized);
-                Log.d(TAG, "m_btn_config_sel_remote_apply_changes.setOnClickListener: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.toString() + " value from \"" + s_old_config_sel__remote_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue() + "\"");
-                m_btn_config_sel_remote_apply_changes.setEnabled(false);
-            } else {
-                //no change to share pref val - do nothing other than log
-                Log.d(TAG, "m_btn_config_sel_remote_apply_changes.setOnClickListener: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue() + "\") since normalized new value (\"" + s_remote_config_toml_sel_normalized + "\") is no different");
-            }
-            synchronize_edittext_config_remote();
-        }
-    };
-
     private void toggle_expandable_view(final ExpandableRelativeLayout erl, boolean expand) {
         if (expand)
             erl.expand();
@@ -1075,235 +1256,6 @@ public class MainActivity
             erl.collapse();
 
     }
-
-    private final View.OnClickListener OnClickListener__m_btn_srvr_ctrl = v -> {
-        Button btn_srvr_ctrl = (Button)v;
-        Boolean srvr_started = (Boolean)btn_srvr_ctrl.getTag(R.id.TAG__SRVR_RUNNING);
-        if (srvr_started == null || !srvr_started) {
-            start_mvt_server();
-            if (m_vw_sect_content__mbgl_nfo.isExpanded()) {
-                m_vw_sect_content__mbgl_nfo.collapse();
-                m_vw_sect_content__mbgl_nfo.setExpanded(false);
-                reconcile_expandable_section(m_vw_sect_content__mbgl_nfo);
-            }
-        } else {
-            stop_mvt_server();
-        }
-    };
-
-    //user selects a geopackage-bundle from spinner - synchronizes selection with shared prefs
-    private final AdapterView.OnItemSelectedListener OnItemSelectedListener__m_spinner_val_gpkg_bundle = new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> adapter, View view, int position, long id) {
-            String s_sel_val = adapter.getItemAtPosition(position).toString();
-            Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle.onItemSelected: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
-
-            String s_cached_gpkg_bundle_val = SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue();
-            Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle.onItemSelected: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_val + "\"");
-
-            boolean no_gpkg_bundles = (s_sel_val == null || s_sel_val.compareTo(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed)) == 0);
-            if (no_gpkg_bundles) {
-                Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle.onItemSelected: no-gpkg-bundles condition!");
-                if (!s_cached_gpkg_bundle_val.isEmpty()) {
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle.onItemSelected: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_val + "\")");
-                    Toast.makeText(getApplicationContext(), "Clearing setting value for geopackage-bundle selection since there are none installed", Toast.LENGTH_SHORT).show();
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.setValue("");
-                } else {
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle.onItemSelected: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_val + "\")");
-                }
-
-                m_btn_srvr_ctrl.setEnabled(false);
-
-                //finally display alertdialog notifying user that tegola cannot be used until a gpkg-bundle is installed
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
-                alertDialogBuilder.setTitle(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed));
-                alertDialogBuilder
-                    .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed__alert_msg))
-                    .setCancelable(false)
-                    .setNegativeButton(
-                        getString(R.string.cancel),
-                        (dialog, id1) -> dialog.dismiss()
-                    )
-                    .setPositiveButton(
-                        getString(R.string.OK),
-                        (dialog, id12) -> {
-                            startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
-                            dialog.dismiss();
-                        }
-                    );
-                AlertDialog alertDialog = alertDialogBuilder.create();
-                alertDialog.show();
-            } else {
-                //first, update shared pref val as necessary - does sel value differ from cached?
-                if (s_cached_gpkg_bundle_val.compareTo(s_sel_val) != 0) {
-                    Toast.makeText(getApplicationContext(), "Saving new setting value for geopackage-bundle \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
-                    //now update shared pref
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.setValue(s_sel_val);
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle.onItemSelected: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\"");
-                } else {
-                    //no change to shared pref val
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle.onItemSelected: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
-                }
-
-                //now update UI based on existence of current local geopackage-bundle selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue())
-                File f_gpkg_bundles_root_dir = null;
-                try {
-                    f_gpkg_bundles_root_dir = GPKG.Local.F_GPKG_BUNDLE_ROOT_DIR.getInstance(getApplicationContext());
-                    File f_gpkg_bundle = new File(f_gpkg_bundles_root_dir, SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue());
-                    //and same MVT srvr control (start/stop) button
-                    m_btn_srvr_ctrl.setEnabled(f_gpkg_bundle.exists());
-                    if (f_gpkg_bundle.exists())
-                        synchronize_spinner_gpkg_bundle_props();
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> adapter) {
-            Toast.makeText(getApplicationContext(), "Cleared local config toml file selection", Toast.LENGTH_SHORT).show();
-            //disable/hide m_btn_config_sel_local__edit_file
-            m_btn_config_sel_local__edit_file.setVisibility(View.GONE);
-            m_btn_config_sel_local__edit_file.setEnabled(false);
-        }
-    };
-
-    //user selects a geopackage-bundle config from spinner - synchronizes selection with shared prefs
-    private final AdapterView.OnItemSelectedListener OnItemSelectedListener__m_spinner_val_gpkg_bundle_config = new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> adapter, View view, int position, long id) {
-            String s_sel_val = adapter.getItemAtPosition(position).toString();
-            Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle_config.onItemSelected: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
-
-            String s_cached_gpkg_bundle_config_val = SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue();
-            Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle_config.onItemSelected: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_config_val + "\"");
-
-            boolean no_gpkg_bundle_cfg = (s_sel_val == null);
-            if (no_gpkg_bundle_cfg) {
-                Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle_config.onItemSelected: no-gpkg-no_gpkg_bundle_cfg condition!");
-                if (!s_cached_gpkg_bundle_config_val.isEmpty()) {
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle_config.onItemSelected: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_config_val + "\")");
-                    Toast.makeText(getApplicationContext(), "Clearing setting value for geopackage-bundle config selection since there are none installed", Toast.LENGTH_SHORT).show();
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.setValue("");
-                } else {
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle_config.onItemSelected: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_config_val + "\")");
-                }
-
-                m_btn_srvr_ctrl.setEnabled(false);
-
-                //finally display alertdialog notifying user that tegola cannot be used until a gpkg-bundle is installed
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
-                alertDialogBuilder.setTitle(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundle_props_installed));
-                alertDialogBuilder
-                    .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundle_configs_installed__alert_msg))
-                    .setCancelable(false)
-                    .setNegativeButton(
-                        getString(R.string.cancel),
-                        (dialog, id1) -> dialog.dismiss()
-                    )
-                    .setPositiveButton(
-                        getString(R.string.OK),
-                        (dialog, id12) -> {
-                            startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
-                            dialog.dismiss();
-                        }
-                    );
-                AlertDialog alertDialog = alertDialogBuilder.create();
-                alertDialog.show();
-            } else {
-                //first, update shared pref val as necessary - does sel value differ from cached?
-                if (s_cached_gpkg_bundle_config_val.compareTo(s_sel_val) != 0) {
-                    Toast.makeText(getApplicationContext(), "Saving new setting value for geopackage-bundle config \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
-                    //now update shared pref
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.setValue(s_sel_val);
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle_config.onItemSelected: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_config_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\"");
-                } else {
-                    //no change to shared pref val
-                    Log.d(TAG, "OnItemSelectedListener__m_spinner_val_gpkg_bundle_config.onItemSelected: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
-                }
-
-                //now update UI based on existence of current local geopackage-bundle config selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue())
-                File f_gpkg_bundle_dir = null;
-                try {
-                    f_gpkg_bundle_dir = new File(GPKG.Local.F_GPKG_BUNDLE_ROOT_DIR.getInstance(getApplicationContext()), SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue());
-                    File[] f_gpkg_bundle_props = f_gpkg_bundle_dir.listFiles((dir, name) -> name.endsWith(".properties"));
-                    //and same MVT srvr control (start/stop) button
-                    m_btn_srvr_ctrl.setEnabled(f_gpkg_bundle_props.length > 0);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> adapter) {
-            Toast.makeText(getApplicationContext(), "Cleared local config toml file selection", Toast.LENGTH_SHORT).show();
-            //disable/hide m_btn_config_sel_local__edit_file
-            m_btn_config_sel_local__edit_file.setVisibility(View.GONE);
-            m_btn_config_sel_local__edit_file.setEnabled(false);
-        }
-    };
-
-    private final AdapterView.OnItemSelectedListener OnItemSelectedListener__m_spinner_val_remote_tile_server = new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> adapter, View view, int position, long id) {
-            String s_sel_val = adapter.getItemAtPosition(position).toString();
-            Log.d(TAG, String.format("OnItemSelectedListener__m_spinner_val_remote_tile_server.onItemSelected: triggered item selection @ position %d with value %s", position, (s_sel_val == null ? "null" : "\"" + s_sel_val + "\"")));
-
-            String s_cached_sel_canon_remote_tile_server = SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue();
-            Log.d(TAG, String.format("OnItemSelectedListener__m_spinner_val_remote_tile_server.onItemSelected: shared pref setting %s current value is \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
-
-            boolean no_remote_tile_srvr_sel = (s_sel_val == null);
-            if (no_remote_tile_srvr_sel) {
-                Log.d(TAG, "OnItemSelectedListener__m_spinner_val_remote_tile_server.onItemSelected: no_remote_tile_srvr_sel condition!");
-                if (!s_cached_sel_canon_remote_tile_server.isEmpty()) {
-                    Log.d(TAG, String.format("OnItemSelectedListener__m_spinner_val_remote_tile_server.onItemSelected: clearing shared pref setting %s value (currently \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
-                    Toast.makeText(getApplicationContext(), "Clearing setting value for canonical remote tile server selection since there are none available", Toast.LENGTH_SHORT).show();
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.setValue("");
-                } else {
-                    Log.d(TAG, String.format("OnItemSelectedListener__m_spinner_val_remote_tile_server.onItemSelected: skipping change to shared pref setting %s since it is already cleared (value is \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
-                }
-
-                m_btn_stream_tiles_from_remote.setEnabled(false);
-
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
-                alertDialogBuilder.setTitle(getString(R.string.no_valid_canonical_remote_tile_server_urls_found));
-                alertDialogBuilder
-                    .setMessage(getString(R.string.no_valid_canonical_remote_tile_server_urls_found__alert_msg))
-                    .setCancelable(false)
-                    .setNeutralButton(
-                            getString(R.string.OK),
-                        (dialog, id1) -> dialog.dismiss()
-                    );
-                AlertDialog alertDialog = alertDialogBuilder.create();
-                alertDialog.show();
-            } else {
-                //first, update shared pref val as necessary - does sel value differ from cached?
-                if (s_cached_sel_canon_remote_tile_server.compareTo(s_sel_val) != 0) {
-                    Toast.makeText(getApplicationContext(), String.format("Saving new setting value for remote tile server \"%s\" selection", s_sel_val), Toast.LENGTH_SHORT).show();
-                    //now update shared pref
-                    SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.setValue(s_sel_val);
-                    Log.d(TAG, String.format("OnItemSelectedListener__m_spinner_val_remote_tile_server.onItemSelected: changed setting %s value from \"%s\" to \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server, SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue()));
-                } else {
-                    //no change to shared pref val
-                    Log.d(TAG, String.format("OnItemSelectedListener__m_spinner_val_remote_tile_server.onItemSelected: skipping change to shared pref setting %s value (\"%s\") since new value (\"%s\") is no different", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(), s_sel_val));
-                }
-
-                m_btn_stream_tiles_from_remote.setEnabled(true);
-            }
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> adapterView) {
-            Toast.makeText(getApplicationContext(), "Cleared canonical remote tile server selection", Toast.LENGTH_SHORT).show();
-            m_btn_stream_tiles_from_remote.setEnabled(false);
-        }
-    };
 
     //MBGLFragment overrides
     @Override
@@ -1351,12 +1303,12 @@ public class MainActivity
         File f_filesDir = getFilesDir();
         File[] config_toml_files = f_filesDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".toml"));
 
-        //2.1 remove current entries from m_spinner_val_local_config dataAdapter
+        //2.1 remove current entries from m_spinner_postgis_local_config_sel dataAdapter
         Log.d(TAG, "synchronize_spinner_local_config: clearing spinner items");
         m_spinner_val_local_config__items.clear();
 
         if (config_toml_files.length > 0) {//found local config.toml files
-            //2.2 add found config.toml filenames into m_spinner_val_local_config dataAdapter
+            //2.2 add found config.toml filenames into m_spinner_postgis_local_config_sel dataAdapter
             for (int i = 0; i < config_toml_files.length; i++) {
                 final String config_toml_filename = config_toml_files[i].getName();
                 Log.d(TAG, "synchronize_spinner_local_config: found local config '.toml' file: " + config_toml_filename + " - adding it to spinner items");
@@ -1370,28 +1322,28 @@ public class MainActivity
             m_spinner_val_local_config__items.add(s_config_sel__local_val__no_config_files_found);
         }
 
-        //3. reconcile ConfigSettings.STRING_CONFIG_SETTING.TM_CONFIG_TOML__LOCAL__SELECTION setting with m_spinner_val_local_config__dataadapter items and update selection as necessary
-        int i_sel_pos = m_spinner_val_local_config__dataadapter.getPosition(SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue());
+        //3. reconcile ConfigSettings.STRING_CONFIG_SETTING.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION setting with m_spinner_val_local_config__dataadapter items and update selection as necessary
+        int i_sel_pos = m_spinner_val_local_config__dataadapter.getPosition(SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue());
         if (i_sel_pos != -1) {
-            Log.d(TAG, "synchronize_spinner_local_config: synchronizing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue() + "\" spinner item selection to existing item position " + i_sel_pos);
+            Log.d(TAG, "synchronize_spinner_local_config: synchronizing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\" spinner item selection to existing item position " + i_sel_pos);
         } else {
             //note that we must reset i_sel_pos to 0 here since it will be assigned -1 if we are here
             i_sel_pos = 0;
             Log.d(TAG,
-                    "synchronize_spinner_local_config: cannot synchronize shared prefs setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue()
+                    "synchronize_spinner_local_config: cannot synchronize shared prefs setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue()
                     + "\" to spinner item selection since spinner does not currently have a selectable item with that value; setting spinner selected item position to " + i_sel_pos + " for value \"" + m_spinner_val_local_config__items.get(i_sel_pos) + "\"");
         }
 
         //4. commit changes to spinner to allow for listener to react
-        m_spinner_val_local_config.setSelection(i_sel_pos);
+        m_spinner_postgis_local_config_sel.setSelection(i_sel_pos);
         m_spinner_val_local_config__dataadapter.notifyDataSetChanged();
     }
 
     private void synchronize_edittext_config_remote() {
-        m_edt_val_config_sel__remote.setText(SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue());
-        m_btn_config_sel_remote_apply_changes.setEnabled(false);
-        if (SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue().isEmpty()) {
-            m_btn_srvr_ctrl.setEnabled(false);
+        m_edt_postgis_remote_config_url.setText(SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue());
+        m_btn_postgis_remote_config_url__apply_changes.setEnabled(false);
+        if (SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue().isEmpty()) {
+            m_btn_local_mvt_srvr_ctrl.setEnabled(false);
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
             alertDialogBuilder.setTitle(getString(R.string.srvr_config_type__remote__no_url_specified));
             alertDialogBuilder
@@ -1404,21 +1356,21 @@ public class MainActivity
             AlertDialog alertDialog = alertDialogBuilder.create();
             alertDialog.show();
         } else
-            m_btn_srvr_ctrl.setEnabled(true);
+            m_btn_local_mvt_srvr_ctrl.setEnabled(true);
     }
 
     private void validate__m_edt_val_config_sel__remote() {
-        String s_old_config_sel__remote_val = SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue();
-        String s_config_sel__remote_val__proposted = m_edt_val_config_sel__remote.getText().toString();
-        Log.d(TAG, "validate__m_edt_val_config_sel__remote: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.toString() + " current value is \"" + s_old_config_sel__remote_val + "\"");
+        String s_old_config_sel__remote_val = SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue();
+        String s_config_sel__remote_val__proposted = m_edt_postgis_remote_config_url.getText().toString();
+        Log.d(TAG, "validate__m_edt_val_config_sel__remote: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value is \"" + s_old_config_sel__remote_val + "\"");
         if (s_old_config_sel__remote_val.compareTo(s_config_sel__remote_val__proposted) == 0) {
-            Log.d(TAG, "validate__m_edt_val_config_sel__remote: m_edt_val_config_sel__remote value is no different than shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
-            m_btn_config_sel_remote_apply_changes.setEnabled(false);
+            Log.d(TAG, "validate__m_edt_val_config_sel__remote: m_edt_postgis_remote_config_url value is no different than shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
+            m_btn_postgis_remote_config_url__apply_changes.setEnabled(false);
         } else {
-            Log.d(TAG, "validate__m_edt_val_config_sel__remote: m_edt_val_config_sel__remote proposed value \"" + s_config_sel__remote_val__proposted + "\" differs from shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
-            m_btn_config_sel_remote_apply_changes.setEnabled(true);
+            Log.d(TAG, "validate__m_edt_val_config_sel__remote: m_edt_postgis_remote_config_url proposed value \"" + s_config_sel__remote_val__proposted + "\" differs from shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
+            m_btn_postgis_remote_config_url__apply_changes.setEnabled(true);
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(m_edt_val_config_sel__remote.getWindowToken(), 0);
+            imm.hideSoftInputFromWindow(m_edt_postgis_remote_config_url.getWindowToken(), 0);
         }
     }
 
@@ -1705,7 +1657,7 @@ public class MainActivity
 
     @Override
     public void OnMVTServerStarting() {
-        m_tv_val_srvr_status.setText(getString(R.string.starting));
+        m_tv_val_local_mvt_srvr_status.setText(getString(R.string.starting));
         m_sect_content__item__srvr_console_output.setVisibility(View.VISIBLE);
     }
 
@@ -1727,9 +1679,9 @@ public class MainActivity
         sb_srvr_status.append(getString(R.string.running));
         if (pid != -1)
             sb_srvr_status.append(" (pid " + pid + ")");
-        textview_setColorizedText(m_tv_val_srvr_status, sb_srvr_status.toString(), getString(R.string.running), Color.GREEN);
-        m_btn_srvr_ctrl.setTag(R.id.TAG__SRVR_RUNNING, true);
-        m_btn_srvr_ctrl.setText(getString(R.string.close_tile_stream));
+        textview_setColorizedText(m_tv_val_local_mvt_srvr_status, sb_srvr_status.toString(), getString(R.string.running), Color.GREEN);
+        m_btn_local_mvt_srvr_ctrl.setTag(R.id.TAG__SRVR_RUNNING, true);
+        m_btn_local_mvt_srvr_ctrl.setText(getString(R.string.close_tile_stream));
         //now disable edit-config button
         m_btn_config_sel_local__edit_file.setEnabled(false);
         m_sect_content__item__srvr_console_output.setVisibility(View.VISIBLE);
@@ -1796,10 +1748,10 @@ public class MainActivity
 
     @Override
     public void OnMVTServerListening(final int port) {
-        Boolean srvr_started = (Boolean)m_btn_srvr_ctrl.getTag(R.id.TAG__SRVR_RUNNING);
+        Boolean srvr_started = (Boolean) m_btn_local_mvt_srvr_ctrl.getTag(R.id.TAG__SRVR_RUNNING);
         if (srvr_started != null && srvr_started == true) {
-            String s_srvr_status = m_tv_val_srvr_status.getText().toString() + "\n\t\tlistening on port " + port;
-            textview_setColorizedText(m_tv_val_srvr_status, s_srvr_status, getString(R.string.running), Color.GREEN);
+            String s_srvr_status = m_tv_val_local_mvt_srvr_status.getText().toString() + "\n\t\tlistening on port " + port;
+            textview_setColorizedText(m_tv_val_local_mvt_srvr_status, s_srvr_status, getString(R.string.running), Color.GREEN);
             mvstate = MAPVIEW_STATE.OPENING_STREAM__LOCAL;
             m_controllerClient.mvt_server__get_capabilities(
                 Constants.Strings.INTENT.ACTION.REQUEST.MVT_SERVER.REST_API.GET_JSON.EXTRA_KEY.PURPOSE.VALUE.LOAD_MAP.STRING
@@ -1991,7 +1943,7 @@ public class MainActivity
 
     @Override
     public void OnMVTServerStopping() {
-        textview_setColorizedText(m_tv_val_srvr_status, getString(R.string.stopping), getString(R.string.stopping), Color.YELLOW);
+        textview_setColorizedText(m_tv_val_local_mvt_srvr_status, getString(R.string.stopping), getString(R.string.stopping), Color.YELLOW);
     }
 
     private void mbgl_map_stop() {
@@ -2027,9 +1979,9 @@ public class MainActivity
         mbgl_map_stop();
 
         Log.d(TAG, "OnMVTServerStopped: updating status-related UX");
-        textview_setColorizedText(m_tv_val_srvr_status, getString(R.string.stopped), getString(R.string.stopped), Color.RED);
-        m_btn_srvr_ctrl.setTag(R.id.TAG__SRVR_RUNNING, false);
-        m_btn_srvr_ctrl.setText(getString(R.string.open_tile_stream));
+        textview_setColorizedText(m_tv_val_local_mvt_srvr_status, getString(R.string.stopped), getString(R.string.stopped), Color.RED);
+        m_btn_local_mvt_srvr_ctrl.setTag(R.id.TAG__SRVR_RUNNING, false);
+        m_btn_local_mvt_srvr_ctrl.setText(getString(R.string.open_tile_stream));
         m_btn_config_sel_local__edit_file.setEnabled(true);
         m_tv_tegola_console_output.setText("");
         m_sect_content__item__srvr_console_output.setVisibility(View.GONE);
@@ -2049,14 +2001,14 @@ public class MainActivity
             if (!remote_config) {
                 File
                         f_filesDir = getFilesDir()
-                        , f_postgis_toml = new File(f_filesDir.getPath(), SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__LOCAL__SELECTION.getValue());
+                        , f_postgis_toml = new File(f_filesDir.getPath(), SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue());
                 s_config_toml = f_postgis_toml.getPath();
                 if (!f_postgis_toml.exists()) {
                     Log.e(TAG, "mvt_server__start: failed to start mvt server for provider type postgis since toml file " + s_config_toml + " does not exist!");
                     return;
                 }
             } else
-                s_config_toml = SharedPrefsManager.STRING_SHARED_PREF.TM_CONFIG_TOML__REMOTE__SELECTION.getValue();
+                s_config_toml = SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue();
             m_controllerClient.mvt_server__start(new FGS.MVT_SERVER_START_SPEC__POSTGIS_PROVIDER(remote_config, s_config_toml));
         }
     }
