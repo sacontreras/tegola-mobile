@@ -48,6 +48,7 @@ import okhttp3.Handshake;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Response;
+import timber.log.Timber;
 
 import static com.mapbox.mapboxsdk.Mapbox.getApplicationContext;
 import static com.mapbox.mapboxsdk.maps.MapView.DID_FAIL_LOADING_MAP;
@@ -97,6 +98,8 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
 
     private static final String ARG__TEGOLA_CAPABILITIES = "TEGOLA_CAPABILITIES";
     private TegolaCapabilities tegolaCapabilities = null;
+    private static final String ARG__MBGL_HTTP_CONFIG = "MBGL_HTTP_CONFIG";
+    private MBGLHttpConfig mbglHttpConfig = null;
     private static final String ARG__MBMAP_DEBUG_ACTIVE = "mbmap_debug_active";
     private boolean mbmap_debug_active = false;
 
@@ -160,10 +163,11 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
      * @param tegolaCapabilities mbgl_style_url
      * @return A new instance of fragment MBGLFragment.
      */
-    public static MBGLFragment newInstance(final TegolaCapabilities tegolaCapabilities, final boolean mbmap_debug_active) {
+    public static MBGLFragment newInstance(final TegolaCapabilities tegolaCapabilities, final MBGLHttpConfig mbglHttpConfig, final boolean mbmap_debug_active) {
         MBGLFragment fragment = new MBGLFragment();
         Bundle args = new Bundle();
         args.putParcelable(ARG__TEGOLA_CAPABILITIES, tegolaCapabilities);
+        args.putParcelable(ARG__MBGL_HTTP_CONFIG, mbglHttpConfig);
         args.putBoolean(ARG__MBMAP_DEBUG_ACTIVE, mbmap_debug_active);
         fragment.setArguments(args);
         return fragment;
@@ -174,9 +178,10 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             tegolaCapabilities = getArguments().getParcelable(ARG__TEGOLA_CAPABILITIES);
+            mbglHttpConfig = getArguments().getParcelable(ARG__MBGL_HTTP_CONFIG);
             mbmap_debug_active = getArguments().getBoolean(ARG__MBMAP_DEBUG_ACTIVE);
         } else {
-            Log.e(TAG, "(fragment) onCreate: cannot start mbgl mapview without mbgl style url!");
+            Timber.e("(fragment) onCreate: cannot start mbgl mapview without mbgl style url!");
         }
     }
 
@@ -189,7 +194,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
 
         @Override
         public void connectFailed(Call call, InetSocketAddress inetSocketAddress, Proxy proxy, @Nullable Protocol protocol, IOException ioe) {
-            Log.d(TAG, "(fragment) okhttp.EventListener.connectFailed: for call " + call.request().toString() + "; err: " + ioe.getMessage());
+            Timber.d("(fragment) okhttp.EventListener.connectFailed: for call " + call.request().toString() + "; err: " + ioe.getMessage());
             super.connectFailed(call, inetSocketAddress, proxy, protocol, ioe);
         }
 
@@ -224,7 +229,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
 
         @Override
         public void callFailed(Call call, IOException ioe) {
-            Log.d(TAG, "(fragment) okhttp.EventListener.callFailed: for call " + call.request().toString() + "; error: " + ioe.getMessage());
+            Timber.d("(fragment) okhttp.EventListener.callFailed: for call " + call.request().toString() + "; error: " + ioe.getMessage());
             super.callFailed(call, ioe);
 //            int
 //                    n_running = m_okhttp3_client_dispather.runningCallsCount(),
@@ -257,7 +262,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         public void responseHeadersEnd(Call call, Response response) {
             //Log.d(TAG, "(fragment) okhttp.EventListener.responseHeadersEnd: for call " + call.request().toString());
             if (response.cacheResponse() != null) {
-                Log.d(TAG, "(fragment) okhttp.EventListener.responseHeadersEnd: cached response exists for call " + call.request().toString());
+                Timber.d("(fragment) okhttp.EventListener.responseHeadersEnd: cached response exists for call " + call.request().toString());
             }
             super.responseHeadersEnd(call, response);
         }
@@ -325,8 +330,8 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
             try {
                 File okhttp_cache_dir = new File(getApplicationContext().getFilesDir().getCanonicalPath(), "okhttp");
                 File okhttp_cache_file = new File(okhttp_cache_dir.getCanonicalPath(), "cache");
-                Log.d(TAG, "(fragment) onCreateView: creating okhttp cache file " + okhttp_cache_file.getCanonicalPath() + " (" + BuildConfig.mbgl_http_cache_size + " KB) for mapview okhttpclient");
-                m_okhttp_cache = new Cache(okhttp_cache_file, BuildConfig.mbgl_http_cache_size * 1024);
+                Timber.d("(fragment) onCreateView: creating okhttp cache file %s (%d KB) for mapview okhttpclient", okhttp_cache_file.getCanonicalPath(), mbglHttpConfig.getCache_size_kb());
+                m_okhttp_cache = new Cache(okhttp_cache_file, mbglHttpConfig.getCache_size_kb() * 1024);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -335,18 +340,15 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         HttpRequestUtil.setLogEnabled(true);
         HttpRequestUtil.setPrintRequestUrlOnFailure(true);
         m_okhttp3_client_dispather = new Dispatcher();
-        m_okhttp3_client_dispather.setMaxRequestsPerHost(BuildConfig.mbgl_http_max_requests_per_host);
-        m_okhttp3_client_dispather.setIdleCallback(new Runnable() {
-            @Override
-            public void run() {
-                //Log.d(TAG, "(fragment) onCreateView: m_okhttp3_client_dispather.IdleCallback.run: ");
-            }
+        m_okhttp3_client_dispather.setMaxRequestsPerHost(mbglHttpConfig.getMax_requests_per_host());
+        m_okhttp3_client_dispather.setIdleCallback(() -> {
+            //Log.d(TAG, "(fragment) onCreateView: m_okhttp3_client_dispather.IdleCallback.run: ");
         });
-        Log.d(TAG, "(fragment) onCreateView: mbgl http max requrests host set to: " + BuildConfig.mbgl_http_max_requests_per_host);
+        Timber.d("(fragment) onCreateView: mbgl http max requrests host set to: %d", mbglHttpConfig.getMax_requests_per_host());
         OkHttpClient.Builder okhttpclientbuilder = new OkHttpClient.Builder()
             .dispatcher(m_okhttp3_client_dispather)
-            .connectTimeout(BuildConfig.mbgl_http_connect_timeout, TimeUnit.SECONDS)
-            .readTimeout(BuildConfig.mbgl_http_read_timeout, TimeUnit.SECONDS)
+            .connectTimeout(mbglHttpConfig.getConnect_timeout_sec(), TimeUnit.SECONDS)
+            .readTimeout(mbglHttpConfig.getRead_timeout_sec(), TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .followRedirects(true)
             //.connectionPool(new ConnectionPool(BuildConfig.mbgl_http_max_requests_per_host, 5, TimeUnit.SECONDS))
@@ -354,7 +356,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         if (m_okhttp_cache != null)
             okhttpclientbuilder.cache(m_okhttp_cache);
         m_okhttp3_client = okhttpclientbuilder.build();
-        Log.d(TAG, "(fragment) onCreateView: mbgl http read timeout set to: " + BuildConfig.mbgl_http_read_timeout + " seconds");
+        Timber.d("(fragment) onCreateView: mbgl http read timeout set to: %s seconds", mbglHttpConfig.getRead_timeout_sec());
         HttpRequestUtil.setOkHttpClient(m_okhttp3_client);
 
         mapView.addOnMapChangedListener(new MapView.OnMapChangedListener() {
@@ -526,14 +528,14 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
         });
 
         //disable mbgl telemetry
-        Log.d(TAG, "(fragment) onCreateView: disabling mb telemetry");
+        Timber.d("(fragment) onCreateView: disabling mb telemetry");
         TelemetryEnabler.updateTelemetryState(TelemetryEnabler.State.DISABLED);
 
         mapView.getMapAsync(m_OnMapReadyCallback);
-        Log.d(TAG, "(fragment) onCreateView: setting mbglstyle url from tegolaCapabilities.parsed.maps[0].mbgl_style_json_url: " + tegolaCapabilities.parsed.maps[0].mbgl_style_json_url);
+        Timber.d("(fragment) onCreateView: setting mbglstyle url from tegolaCapabilities.parsed.maps[0].mbgl_style_json_url: " + tegolaCapabilities.parsed.maps[0].mbgl_style_json_url);
         mapView.setStyleUrl(tegolaCapabilities.parsed.maps[0].mbgl_style_json_url);
 
-        Log.d(TAG, "(fragment) onCreateView: calling mapView.onCreate()...");
+        Timber.d("(fragment) onCreateView: calling mapView.onCreate()...");
         mapView.onCreate(savedInstanceState);
 
         return this_frag_layout_view;
@@ -542,7 +544,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Log.d(TAG, String.format("(fragment) onViewCreated"));
+        Timber.d(String.format("(fragment) onViewCreated"));
     }
 
     private final double PREF_AUTO_SCALE_MINZOOM_DIVISOR = 5.0;
@@ -554,18 +556,18 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
             m_mapboxMap = mapboxMap;
 
             m_mapboxMap.addOnCameraMoveListener(m_OnCameraMoveListener);
-            Log.d(TAG, "(fragment) onMapReady: setting DebugActive to: " + mbmap_debug_active);
+            Timber.d("(fragment) onMapReady: setting DebugActive to: " + mbmap_debug_active);
             m_mapboxMap.setDebugActive(mbmap_debug_active);
 
             if (tegolaCapabilities.parsed.maps_layers_minzoom != -1.0) {
-                Log.d(TAG, "(fragment) onMapReady: updating min zoom from tegolaCapabilities.parsed.maps_layers_minzoom: " + tegolaCapabilities.parsed.maps_layers_minzoom);
+                Timber.d("(fragment) onMapReady: updating min zoom from tegolaCapabilities.parsed.maps_layers_minzoom: " + tegolaCapabilities.parsed.maps_layers_minzoom);
                 m_mapboxMap.setMinZoomPreference(tegolaCapabilities.parsed.maps_layers_minzoom);
             }
             if (tegolaCapabilities.parsed.maps_layers_maxzoom != -1.0) {
-                Log.d(TAG, "(fragment) onMapReady: updating max zoom from tegolaCapabilities.parsed.maps_layers_maxzoom: " + tegolaCapabilities.parsed.maps_layers_maxzoom);
+                Timber.d("(fragment) onMapReady: updating max zoom from tegolaCapabilities.parsed.maps_layers_maxzoom: " + tegolaCapabilities.parsed.maps_layers_maxzoom);
                 m_mapboxMap.setMaxZoomPreference(tegolaCapabilities.parsed.maps_layers_maxzoom);
             }
-            Log.d(TAG, "(fragment) onMapReady: min zoom level: " + m_mapboxMap.getMinZoomLevel() + "; max zoom level: " + m_mapboxMap.getMaxZoomLevel());
+            Timber.d("(fragment) onMapReady: min zoom level: " + m_mapboxMap.getMinZoomLevel() + "; max zoom level: " + m_mapboxMap.getMaxZoomLevel());
 
             //adjust mb uisettings and attribution parsed from tegola capabilities before prefetching tiles
             m_mapboxMap.getUiSettings().setAllGesturesEnabled(true);
@@ -582,7 +584,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
                 .append(tegolaCapabilities.version);
             m_tv_version.setText(sb_verion.toString());
 
-            Log.d(TAG, "(fragment) onMapReady: setting PrefetchedTiles to: true");
+            Timber.d("(fragment) onMapReady: setting PrefetchedTiles to: true");
             m_mapboxMap.setPrefetchesTiles(true);
 
 //            int
@@ -595,12 +597,11 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
             m_ctv_show_camera_loc.callOnClick();
 
             CameraPosition camera_pos = m_mapboxMap.getCameraPosition();
-            Log.d(TAG, "(fragment) onMapReady: camera initial pos: "
+            Timber.d("(fragment) onMapReady: camera initial pos: "
                     + "camera_pos.target.getLatitude(): " + camera_pos.target.getLatitude()
                     + "; camera_pos.target.getLongitude(): " + camera_pos.target.getLongitude()
                     + "; camera_pos.zoom: " + camera_pos.zoom
-                    + "; camera_pos.bearing: " + camera_pos.bearing
-            );
+                    + "; camera_pos.bearing: " + camera_pos.bearing);
             if (tegolaCapabilities.parsed.maps[0].center.latitude != -1.0 && tegolaCapabilities.parsed.maps[0].center.longitude != -1.0 && tegolaCapabilities.parsed.maps[0].center.zoom != -1.0)
                 m_ibtn_goto_map_ctr.callOnClick();
         }
@@ -622,13 +623,12 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
             bearing = m_mapboxMap.getCameraPosition().bearing;
         if (tilt == null)
             tilt = m_mapboxMap.getCameraPosition().tilt;
-        Log.d(TAG, "(fragment) move_camera: setting camera to new pos: "
-            + "lat := " + lat
-            + "; lon := " + lon
-            + "; zoom := " + zoom
-            + "; bearing := " + bearing
-            + "; tilt := " + tilt
-        );
+        Timber.d("(fragment) move_camera: setting camera to new pos: "
+                + "lat := " + lat
+                + "; lon := " + lon
+                + "; zoom := " + zoom
+                + "; bearing := " + bearing
+                + "; tilt := " + tilt);
         m_mapboxMap.easeCamera(
             CameraUpdateFactory.newCameraPosition(
                 camera_pos_builder
@@ -647,11 +647,10 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
                 lat = location.getLatitude(),
                 lon = location.getLongitude(),
                 bearing = location.getBearing();
-        Log.d(TAG, "(fragment) onBrokerLocationUpdate: received location update from broker - easing camera to: "
-            + "lat: " + lat
-            + "; lon: " + lon
-            + "; bearing: " + bearing
-        );
+        Timber.d("(fragment) onBrokerLocationUpdate: received location update from broker - easing camera to: "
+                + "lat: " + lat
+                + "; lon: " + lon
+                + "; bearing: " + bearing);
         m_mapboxMap.easeCamera(
             CameraUpdateFactory.newCameraPosition(
                 new CameraPosition.Builder()
@@ -691,7 +690,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
     public void onStart() {
         super.onStart();
 
-        Log.d(TAG, "(fragment) onStart: calling mapView.onStart()...");
+        Timber.d("(fragment) onStart: calling mapView.onStart()...");
         mapView.onStart();
     }
 
@@ -699,7 +698,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
     public void onResume() {
         super.onResume();
 
-        Log.d(TAG, "(fragment) onResume: calling mapView.onResume()...");
+        Timber.d("(fragment) onResume: calling mapView.onResume()...");
         mapView.onResume();
     }
 
@@ -707,7 +706,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
     public void onPause() {
         super.onPause();
 
-        Log.d(TAG, "(fragment) onPause: calling mapView.onPause()...");
+        Timber.d("(fragment) onPause: calling mapView.onPause()...");
         mapView.onPause();
     }
 
@@ -715,7 +714,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
     public void onStop() {
         super.onStop();
 
-        Log.d(TAG, "(fragment) onStop: calling mapView.onStop()...");
+        Timber.d("(fragment) onStop: calling mapView.onStop()...");
         mapView.onStop();
     }
 
@@ -723,7 +722,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
     public void onLowMemory() {
         super.onLowMemory();
 
-        Log.d(TAG, "(fragment) onLowMemory: calling mapView.onLowMemory()...");
+        Timber.d("(fragment) onLowMemory: calling mapView.onLowMemory()...");
         mapView.onLowMemory();
     }
 
@@ -736,7 +735,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
     public void onDestroyView() {
         super.onDestroyView();
 
-        Log.d(TAG, "(fragment) onDestroyView: calling mapView.onDestroy()...");
+        Timber.d("(fragment) onDestroyView: calling mapView.onDestroy()...");
         mapView.onDestroy();
 
         m_okhttp3_client.dispatcher().cancelAll();
@@ -765,13 +764,12 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
             zoom = m_mapboxMap.getCameraPosition().zoom,
             bearing = m_mapboxMap.getCameraPosition().bearing,
             tilt = m_mapboxMap.getCameraPosition().tilt;
-        Log.d(TAG, "(fragment) onSaveInstanceState: saving current camera pos: "
-            + "lat := " + lat
-            + "; lon := " + lon
-            + "; zoom := " + zoom
-            + "; bearing := " + bearing
-            + "; tilt := " + tilt
-        );
+        Timber.d("(fragment) onSaveInstanceState: saving current camera pos: "
+                + "lat := " + lat
+                + "; lon := " + lon
+                + "; zoom := " + zoom
+                + "; bearing := " + bearing
+                + "; tilt := " + tilt);
         outState.putDoubleArray("MV_CAMERA_POS", new double[]{lat, lon, zoom, bearing, tilt});
         mapView.onSaveInstanceState(outState);
         super.onSaveInstanceState(outState);
@@ -789,7 +787,7 @@ public class MBGLFragment extends android.support.v4.app.Fragment implements Loc
 
     @Override
     public void onDetach() {
-        Log.d(TAG, "(fragment) onDetach: entered");
+        Timber.d("(fragment) onDetachß: entered");
         super.onDetach();
         mFragInteractionListener = null;
     }

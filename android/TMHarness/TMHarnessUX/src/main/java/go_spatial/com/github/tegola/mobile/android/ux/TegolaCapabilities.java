@@ -16,9 +16,9 @@ public final class TegolaCapabilities implements Parcelable {
             public String mbgl_style_json_url = "";
             public static class Center implements Parcelable {
                 public double
-                        latitude = 0.0,
-                        longitude = 0.0,
-                        zoom = 0.0;
+                    latitude = 0.0,
+                    longitude = 0.0,
+                    zoom = 0.0;
 
                 @Override
                 public int describeContents() {
@@ -32,8 +32,7 @@ public final class TegolaCapabilities implements Parcelable {
                     dest.writeDouble(this.zoom);
                 }
 
-                public Center() {
-                }
+                public Center() {}
 
                 protected Center(Parcel in) {
                     this.latitude = in.readDouble();
@@ -57,8 +56,8 @@ public final class TegolaCapabilities implements Parcelable {
             public static class Layer implements Parcelable {
                 public String name = "";
                 public double
-                        minzoom = 0.0,
-                        maxzoom = 0.0;
+                    minzoom = 0.0,
+                    maxzoom = 0.0;
 
                 @Override
                 public int describeContents() {
@@ -72,8 +71,7 @@ public final class TegolaCapabilities implements Parcelable {
                     dest.writeDouble(this.maxzoom);
                 }
 
-                public Layer() {
-                }
+                public Layer() {}
 
                 protected Layer(Parcel in) {
                     this.name = in.readString();
@@ -135,8 +133,8 @@ public final class TegolaCapabilities implements Parcelable {
         }
         public Map[] maps = null;
         public double
-                maps_layers_minzoom = -1.0,
-                maps_layers_maxzoom = -1.0;
+            maps_layers_minzoom = -1.0,
+            maps_layers_maxzoom = -1.0;
 
         @Override
         public int describeContents() {
@@ -150,8 +148,7 @@ public final class TegolaCapabilities implements Parcelable {
             dest.writeDouble(this.maps_layers_maxzoom);
         }
 
-        public Parsed() {
-        }
+        public Parsed() {}
 
         protected Parsed(Parcel in) {
             this.maps = in.createTypedArray(Map.CREATOR);

@@ -33,6 +33,9 @@ import java.util.concurrent.Semaphore;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnEditorAction;
+import butterknife.OnFocusChange;
 import go_spatial.com.github.tegola.mobile.android.controller.*;
 import go_spatial.com.github.tegola.mobile.android.controller.Constants;
 import go_spatial.com.github.tegola.mobile.android.controller.utils.Files;
@@ -89,23 +92,8 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         m_edt_remote_gpkg_bundle__name.setOnKeyListener(OnKeyListener__disable_install);
-        m_edt_remote_gpkg_bundle__name.setOnEditorActionListener(OnEditorActionListener__validate_enable_install);
-        m_edt_remote_gpkg_bundle__name.setOnFocusChangeListener(OnFocusChangeListener__validate_enable_install);
-
-        m_ibtn_help_gpkg_name.setOnClickListener(onHelpButtonClickLister);
-
         m_edt_remote_gpkg_bundle__ver_props.setOnKeyListener(OnKeyListener__disable_install);
-        m_edt_remote_gpkg_bundle__ver_props.setOnEditorActionListener(OnEditorActionListener__validate_enable_install);
-        m_edt_remote_gpkg_bundle__ver_props.setOnFocusChangeListener(OnFocusChangeListener__validate_enable_install);
-
-        m_ibtn_help_gpkg_props_file.setOnClickListener(onHelpButtonClickLister);
-
         m_edt_local_gpkg_bundle__name.setOnKeyListener(OnKeyListener__disable_install);
-        m_edt_local_gpkg_bundle__name.setOnEditorActionListener(OnEditorActionListener__validate_enable_install);
-        m_edt_local_gpkg_bundle__name.setOnFocusChangeListener(OnFocusChangeListener__validate_enable_install);
-
-        m_btn_install_remote_gpkg_bundle__cancel.setOnClickListener(OnClickListener__m_btn_install_remote_gpkg_bundle__cancel);
-        m_btn_install_remote_gpkg_bundle.setOnClickListener(OnClickListener__m_btn_install_remote_gpkg_bundle);
     }
 
     private LinkedHashMap<String, ArrayList<String>> m_gpkg_bundles_available = null;
@@ -123,7 +111,8 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
         }
     }
 
-    private final View.OnClickListener onHelpButtonClickLister = view -> {
+    @OnClick({R.id.ibtn_help_gpkg_name, R.id.ibtn_help_gpkg_props_file})
+    protected void handleClick__gpkgbundle_help(View view) {
         switch (view.getId()) {
             case R.id.ibtn_help_gpkg_name: {
                 StringBuilder sb_msg = new StringBuilder("Available GeoPackage-Bundles (names):\n\n");
@@ -152,8 +141,8 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                         sb_msg.append(String.format("\t- \"%s\"\n", s_gpkg_bundle_props_file));
                 } else {
                     sb_msg = s_gpkg_bundle_name.isEmpty()
-                        ? new StringBuilder("No Geopackage-Bundle is named/selected!\n\nPlease name/select an avaialble Geopackage-Bundle.")
-                        : new StringBuilder(String.format("\"%s\" does not name an available Geopackage-Bundle!", s_gpkg_bundle_name));
+                            ? new StringBuilder("No Geopackage-Bundle is named/selected!\n\nPlease name/select an avaialble Geopackage-Bundle.")
+                            : new StringBuilder(String.format("\"%s\" does not name an available Geopackage-Bundle!", s_gpkg_bundle_name));
                 }
                 sb_msg.append("\n");
                 AlertDialog alertDialog = new AlertDialog.Builder(InstallGpkgBundleActivity.this)
@@ -169,7 +158,83 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                 break;
             }
         }
-    };
+    }
+
+    @OnEditorAction({R.id.edt_remote_gpkg_bundle__name, R.id.edt_remote_gpkg_bundle__ver_props, R.id.edt_local_gpkg_bundle__name})
+    protected boolean handleEditorAction__gpkgbundle_fields(TextView textView, int actionId, KeyEvent keyEvent) {
+        int etid = textView.getId();
+        String s_val = textView.getText().toString().trim();
+        Integer kc = keyEvent != null ? keyEvent.getKeyCode() : null;
+        Timber.d(
+            "handleEditorAction__gpkgbundle_fields: handling %s action keyevent.keycode %s for edittext id %s",
+            actionId == EditorInfo.IME_NULL ? "EditorInfo.IME_NULL" : "EditorInfo.IME_ACTION_DONE",
+            kc != null ? String.valueOf(kc) : "<NO_KEY_PRESSED>",
+            getResources().getResourceName(etid)
+        );
+        if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
+            validate_enable_install_button();
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(textView.getWindowToken(), 0);
+            return true;
+        }
+        return false;
+    }
+
+    @OnFocusChange({R.id.edt_remote_gpkg_bundle__name, R.id.edt_remote_gpkg_bundle__ver_props, R.id.edt_local_gpkg_bundle__name})
+    protected void handleFocusChange__gpkgbundle_fields(View v, boolean hasFocus) {
+        if (!hasFocus) {
+            validate_enable_install_button();
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        }
+    }
+
+    @OnClick(R.id.btn_install_remote_geopackage_bundle__cancel)
+    protected void handleClick__gpkgbudle__cancel_install(View v) {
+        InstallGpkgBundleActivity.this.setResult(INSTALL_GPKG_BUNDLE_RESULT__CANCELLED);
+        InstallGpkgBundleActivity.this.finish();
+    }
+
+    @OnClick(R.id.btn_install_remote_gpkg_bundle)
+    protected void handleClick__gpkgbundle_install(View v) {
+        m_vw_progress.setVisibility(View.VISIBLE);
+
+        try {
+            String local_gpkg_bundle_path = build_local_gpkg_bundle_path_string();
+            Timber.d("handleClick__gpkgbundle_install: local_gpkg_bundle_path==" + local_gpkg_bundle_path);
+
+            //queue up task to get remote version.properties - this file contains the download-spec for the selected gpkg-bundle
+            // we need to process this first, to find out how many and which components to download that comprise this gpkg-bundle
+            String s_gpkg_version_props_fname = m_edt_remote_gpkg_bundle__ver_props.getText().toString().trim();
+            String s_req_suffix = ".properties";
+            if (!s_gpkg_version_props_fname.endsWith(s_req_suffix)) {
+                Timber.d("handleClick__gpkgbundle_install: normalizing ver props fname \"" + s_gpkg_version_props_fname + "\" to \"" + s_gpkg_version_props_fname + s_req_suffix + "\"");
+                s_gpkg_version_props_fname += s_req_suffix;
+            }
+            HttpUrl httpurl_version_props = HttpUrl.parse(build_remote_gpkg_bundle_file_url_string(s_gpkg_version_props_fname));
+            Timber.d("handleClick__gpkgbundle_install: FNAME ==" + httpurl_version_props.toString());
+            File localfile_version_props = new File(local_gpkg_bundle_path, s_gpkg_version_props_fname);
+            Timber.d("handleClick__gpkgbundle_install: localfile_version_props path ==" + localfile_version_props.getCanonicalPath());
+            Bundle bundle = new Bundle();
+            bundle.putBoolean(ShowReplaceGPKGBundleFileAlertDialog.ARG_REPLACE_GPKG_BUNDLE_FILE, true);
+            if (localfile_version_props.exists())
+                localfile_version_props.delete();
+            m_gpkg_bundle_download_boostrapper.submit(
+                    new HTTP.AsyncGet.CallableTask(
+                            new HTTP.AsyncGet.HttpUrl_To_Local_File(httpurl_version_props, localfile_version_props),
+                            new AsyncGetGpkgBundleFileTaskStageHandler()
+                    )
+            );
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+//            catch (HTTP.AsyncGet.TaskExecuteQueueException e) {
+//                e.printStackTrace();
+//            }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
@@ -223,11 +288,6 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
             .toString();
     }
 
-    private final View.OnClickListener OnClickListener__m_btn_install_remote_gpkg_bundle__cancel = v -> {
-        InstallGpkgBundleActivity.this.setResult(INSTALL_GPKG_BUNDLE_RESULT__CANCELLED);
-        InstallGpkgBundleActivity.this.finish();
-    };
-
     private TextView.OnKeyListener OnKeyListener__disable_install = (v, keyCode, event) -> {
         m_edt_local_gpkg_bundle__name.setText("");
         m_btn_install_remote_gpkg_bundle.setEnabled(false);
@@ -248,31 +308,6 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
             m_edt_local_gpkg_bundle__name.setText(s_remote_gpkg_bundle__name);
         }
     }
-
-    //reaction to changing remote gpkg bundle name - user must press enter in editor or switch focus to another control to register to app that a pending change has occurred
-    private final TextView.OnEditorActionListener OnEditorActionListener__validate_enable_install = new TextView.OnEditorActionListener() {
-        @Override
-        public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-            if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
-                validate_enable_install_button();
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(textView.getWindowToken(), 0);
-                return true;
-            } else {
-                return false;
-            }
-        }
-    };
-    private final TextView.OnFocusChangeListener OnFocusChangeListener__validate_enable_install = new View.OnFocusChangeListener() {
-        @Override
-        public void onFocusChange(View v, boolean hasFocus) {
-            if (!hasFocus) {
-                validate_enable_install_button();
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-            }
-        }
-    };
 
     final class ShowReplaceGPKGBundleFileAlertDialog implements Runnable {
         private final String TAG = ShowReplaceGPKGBundleFileAlertDialog.class.getCanonicalName();
@@ -298,13 +333,13 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            Log.d(TAG, "run (working thread): entered");
+            Timber.d("run (working thread): entered");
             permit = new Semaphore(1, true);
             permit.drainPermits();
-            Log.d(TAG, "run (working thread): created semaphore");
+            Timber.d("run (working thread): created semaphore");
             runOnUiThread(
                 () -> {
-                    Log.d(TAG, "run (on ui thread): creating alert dialog");
+                    Timber.d("run (on ui thread): creating alert dialog");
                     AlertDialog alertDialog = new AlertDialog.Builder(context)
                         .setTitle("GeoPackage-Bundle \"" + f_gpkg_bundle_file.getParentFile().getName() + "\" file \"" + f_gpkg_bundle_file.getName() + "\" already exists!")
                         .setMessage("Would you like to REPLACE, or SKIP \"" + f_gpkg_bundle_file.getParentFile().getName() + "\" geopackage bundle file \"" + f_gpkg_bundle_file.getName() + "\"?")
@@ -325,62 +360,19 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                         )
                         .setCancelable(false)
                         .create();
-                    Log.d(TAG, "run (on ui thread): alert dialog created, showing dialog...");
+                    Timber.d("run (on ui thread): alert dialog created, showing dialog...");
                     alertDialog.show();
                 }
             );
 
             try {
                 Thread.sleep(50);
-                Log.d(TAG, "run (working thread): acquiring semaphore permit");
+                Timber.d("run (working thread): acquiring semaphore permit");
                 permit.acquire();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Log.d(TAG, "run (working thread): exiting");
-        }
-    };
-
-    private final View.OnClickListener OnClickListener__m_btn_install_remote_gpkg_bundle = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            m_vw_progress.setVisibility(View.VISIBLE);
-
-            try {
-                String local_gpkg_bundle_path = build_local_gpkg_bundle_path_string();
-                Log.d(TAG, "OnClickListener__m_btn_install_remote_gpkg_bundle.onClick: local_gpkg_bundle_path==" + local_gpkg_bundle_path);
-
-                //queue up task to get remote version.properties - this file contains the download-spec for the selected gpkg-bundle
-                // we need to process this first, to find out how many and which components to download that comprise this gpkg-bundle
-                String s_gpkg_version_props_fname = m_edt_remote_gpkg_bundle__ver_props.getText().toString().trim();
-                String s_req_suffix = ".properties";
-                if (!s_gpkg_version_props_fname.endsWith(s_req_suffix)) {
-                    Log.d(TAG, "OnClickListener__m_btn_install_remote_gpkg_bundle.onClick: normalizing ver props fname \"" + s_gpkg_version_props_fname + "\" to \"" + s_gpkg_version_props_fname + s_req_suffix + "\"");
-                    s_gpkg_version_props_fname += s_req_suffix;
-                }
-                HttpUrl httpurl_version_props = HttpUrl.parse(build_remote_gpkg_bundle_file_url_string(s_gpkg_version_props_fname));
-                Log.d(TAG, "OnClickListener__m_btn_install_remote_gpkg_bundle.onClick: FNAME ==" + httpurl_version_props.toString());
-                File localfile_version_props = new File(local_gpkg_bundle_path, s_gpkg_version_props_fname);
-                Log.d(TAG, "OnClickListener__m_btn_install_remote_gpkg_bundle.onClick: localfile_version_props path ==" + localfile_version_props.getCanonicalPath());
-                Bundle bundle = new Bundle();
-                bundle.putBoolean(ShowReplaceGPKGBundleFileAlertDialog.ARG_REPLACE_GPKG_BUNDLE_FILE, true);
-                if (localfile_version_props.exists())
-                    localfile_version_props.delete();
-                m_gpkg_bundle_download_boostrapper.submit(
-                    new HTTP.AsyncGet.CallableTask(
-                        new HTTP.AsyncGet.HttpUrl_To_Local_File(httpurl_version_props, localfile_version_props),
-                        new AsyncGetGpkgBundleFileTaskStageHandler()
-                    )
-                );
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-//            catch (HTTP.AsyncGet.TaskExecuteQueueException e) {
-//                e.printStackTrace();
-//            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+            Timber.d("run (working thread): exiting");
         }
     };
 
@@ -389,7 +381,7 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
         IN_PROGRESS
     }
     private void OnInstallationStateChanged(@NonNull final E_INSTALLATION_STATE installation_state) {
-        Log.d(TAG, "OnInstallationStateChanged: state==" + installation_state.name());
+        Timber.d("OnInstallationStateChanged: state==" + installation_state.name());
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -442,7 +434,7 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
 
         @Override
         public void onPreExecute() {
-            Log.d(TAG, "onPreExecute - resetting state vars...");
+            Timber.d("onPreExecute - resetting state vars...");
 
             state = AsyncGetGpkgBundleFileTaskHandlerState.STARTING;
 
@@ -464,7 +456,7 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                 }
             }
 
-            Log.d(TAG, String.format("onPreExecute - starting download of %s to %s", s_url_remote_file, s_local_file));
+            Timber.d(String.format("onPreExecute - starting download of %s to %s", s_url_remote_file, s_local_file));
         }
 
         @Override
@@ -493,21 +485,21 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                             Timber.d("onChunkRead: *** WARNING!!! *** - contentLength < 1");
                         }
                         content_length = contentLength;
-                        Log.d(TAG, String.format("onChunkRead: content_length==%d", content_length));
+                        Timber.d(String.format("onChunkRead: content_length==%d", content_length));
                         if (local_file.exists()) {
-                            Log.d(TAG, String.format("onChunkRead: local file %s already exists", s_local_file));
+                            Timber.d(String.format("onChunkRead: local file %s already exists", s_local_file));
                             throw new HTTP.AsyncGet.StageHandlerOnChunkRead_LocalFileAlreadyExistsException(httpUrl_to_local_file);
                         } else {
-                            Log.d(TAG, String.format("onChunkRead: local file %s does not exist", s_local_file));
+                            Timber.d(String.format("onChunkRead: local file %s does not exist", s_local_file));
                             if (!local_file.getParentFile().exists()) {
-                                Log.d(TAG, String.format("onChunkRead: local file directory %s does not exist; creating...", local_file.getParentFile().getCanonicalPath()));
+                                Timber.d(String.format("onChunkRead: local file directory %s does not exist; creating...", local_file.getParentFile().getCanonicalPath()));
                                 local_file.getParentFile().mkdirs();
                             }
                             boolean created_file = local_file.createNewFile();
-                            Log.d(TAG, String.format("onChunkRead: %s new local file %s; opening outputstream", (created_file ? "Succcessfully created" : "Failed to create"), s_local_file));
+                            Timber.d(String.format("onChunkRead: %s new local file %s; opening outputstream", (created_file ? "Succcessfully created" : "Failed to create"), s_local_file));
                             f_outputstream__local_file = new FileOutputStream(local_file);
                         }
-                        Log.d(TAG, String.format("onChunkRead: downloading/writing %s outputstream to %s...", s_url_remote_file, s_local_file));
+                        Timber.d(String.format("onChunkRead: downloading/writing %s outputstream to %s...", s_url_remote_file, s_local_file));
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -540,15 +532,15 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                             }
                         });
                     } else {
-                        Log.d(TAG, String.format("onChunkRead: cannot update interim progress for %s to %s download since content_length==%d", s_url_remote_file, s_local_file, content_length));
+                        Timber.d(String.format("onChunkRead: cannot update interim progress for %s to %s download since content_length==%d", s_url_remote_file, s_local_file, content_length));
                     }
                 } else {//done
-                    Log.d(TAG, String.format("onChunkRead: done; wrote: %d bytes to %s", total_bytes_read, s_local_file));
+                    Timber.d(String.format("onChunkRead: done; wrote: %d bytes to %s", total_bytes_read, s_local_file));
                     if (f_outputstream__local_file != null) {
-                        Log.d(TAG, String.format("onChunkRead: Closing fileoutputstream for %s", s_local_file));
+                        Timber.d(String.format("onChunkRead: Closing fileoutputstream for %s", s_local_file));
                         f_outputstream__local_file.close();
                     } else {
-                        Log.d(TAG, String.format("onChunkRead: Cannot close null fileoutputstream for %s", s_local_file));
+                        Timber.d(String.format("onChunkRead: Cannot close null fileoutputstream for %s", s_local_file));
                     }
                     runOnUiThread(new Runnable() {
                         @Override
@@ -579,10 +571,10 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                 this.exception = exception;
             }
             if (this.exception != null) {
-                Log.e(TAG, "onCancelled: cancelled with exception: " + this.exception.toString() + ": " + this.exception.getMessage());
+                Timber.e("onCancelled: cancelled with exception: " + this.exception.toString() + ": " + this.exception.getMessage());
             }
             state = AsyncGetGpkgBundleFileTaskHandlerState.CANCELLED;
-            Log.d(TAG, String.format("onCancelled - download of %s to %s cancelled", s_url_remote_file, s_local_file));
+            Timber.d(String.format("onCancelled - download of %s to %s cancelled", s_url_remote_file, s_local_file));
         }
 
         @Override
@@ -590,11 +582,11 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
             if (exception != null) {
                 state = AsyncGetGpkgBundleFileTaskHandlerState.DONE_WITH_EXCEPTION;
                 this.exception = exception;
-                Log.d(TAG, "onPostExecute: exception during download: " + this.exception.getMessage());
+                Timber.d("onPostExecute: exception during download: " + this.exception.getMessage());
                 return;
             }
             state = AsyncGetGpkgBundleFileTaskHandlerState.DONE;
-            Log.d(TAG,String.format("onPostExecute - download of %s to %s complete", s_url_remote_file, s_local_file));
+            Timber.d(String.format("onPostExecute - download of %s to %s complete", s_url_remote_file, s_local_file));
         }
     }
 
@@ -614,7 +606,7 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
             int
                 n_succeeded = getSuccessfulDownloads().size(),
                 n_failed = getFailedDownloadExceptions().size();
-            Log.d(getTag(), String.format("onAllDownloadsFinished: all queued downloads have finished -%s%s", n_succeeded > 0 ? " " + n_succeeded + " succeeded" : "", n_failed > 0 ? " " + n_failed + " failed (with exceptions) " : " "));
+            Timber.d(String.format("onAllDownloadsFinished: all queued downloads have finished -%s%s", n_succeeded > 0 ? " " + n_succeeded + " succeeded" : "", n_failed > 0 ? " " + n_failed + " failed (with exceptions) " : " "));
 
             if (n_failed > 0) {
                 if (n_succeeded > 0) {
@@ -626,13 +618,13 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                         File dir_gpkg_bundle__failed_download = f_local_file__failed_download.getParentFile();
                         boolean partially_installed = false;
                         if (!partially_installed_gpkg_bundles.containsKey(dir_gpkg_bundle__failed_download.getName())) {
-                            Log.d(getTag(), String.format("onAllDownloadsFinished: failed download of %s - running partial-installation detection routine for associated geopackage-bundle \"%s\"...", callableTaskException.get_httpUrl_to_local_file().get_url().toString(), dir_gpkg_bundle__failed_download.getName()));
+                            Timber.d(String.format("onAllDownloadsFinished: failed download of %s - running partial-installation detection routine for associated geopackage-bundle \"%s\"...", callableTaskException.get_httpUrl_to_local_file().get_url().toString(), dir_gpkg_bundle__failed_download.getName()));
                             for (HTTP.AsyncGet.HttpUrl_To_Local_File httpUrl_to_local_file : getSuccessfulDownloads()) {
                                 File f_local_file__successful_download = httpUrl_to_local_file.get_file();
                                 File dir_gpkg_bundle__successful_download = f_local_file__successful_download.getParentFile();
                                 try {
                                     if (dir_gpkg_bundle__failed_download.getCanonicalPath().compareTo(dir_gpkg_bundle__successful_download.getCanonicalPath()) == 0) {
-                                        Log.d(getTag(), String.format("onAllDownloadsFinished: partial-installation of geopackage-bundle \"%s\" detected!", dir_gpkg_bundle__failed_download.getName()));
+                                        Timber.d(String.format("onAllDownloadsFinished: partial-installation of geopackage-bundle \"%s\" detected!", dir_gpkg_bundle__failed_download.getName()));
                                         partially_installed_gpkg_bundles.put(dir_gpkg_bundle__failed_download.getName(), dir_gpkg_bundle__failed_download);
                                         partially_installed = true;
                                         break;
@@ -644,11 +636,11 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                         } else
                             partially_installed = true;
                         if (!partially_installed) {
-                            Log.d(getTag(), String.format("onAllDownloadsFinished: geopackage-bundle \"%s\" was not only partially installed (already existed)", dir_gpkg_bundle__failed_download.getName()));
+                            Timber.d(String.format("onAllDownloadsFinished: geopackage-bundle \"%s\" was not only partially installed (already existed)", dir_gpkg_bundle__failed_download.getName()));
                         }
                     }
                     for (String s_partially_installed_gpkg_bundle : partially_installed_gpkg_bundles.keySet()) {
-                        Log.d(getTag(), String.format("onAllDownloadsFinished: removing partially installed geopackage: %s...", s_partially_installed_gpkg_bundle));
+                        Timber.d(String.format("onAllDownloadsFinished: removing partially installed geopackage: %s...", s_partially_installed_gpkg_bundle));
                         File dir_partially_installed_gpkg_bundle = partially_installed_gpkg_bundles.get(s_partially_installed_gpkg_bundle);
                         try {
                             Files.delete(dir_partially_installed_gpkg_bundle);
@@ -724,18 +716,18 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                         try {
                             //build gpkg-bundle toml file-download spec from version.props and queue it up
                             s_prop_val = Files.getPropsFileProperty(f_gpkg_bundle_ver_props, Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.TOML_FILE);
-                            Log.d(getTag(), String.format("onAllDownloadsFinished: version prope (file %s): %s = \"%s\"", f_gpkg_bundle_ver_props.getCanonicalPath(), Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.TOML_FILE, s_prop_val));
+                            Timber.d(String.format("onAllDownloadsFinished: version prope (file %s): %s = \"%s\"", f_gpkg_bundle_ver_props.getCanonicalPath(), Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.TOML_FILE, s_prop_val));
                             String
                                 s_toml_file_remote = s_prop_val,
                                 s_toml_file_local = s_toml_file_remote;
                             if (HTTP.isValidUrl(s_toml_file_remote)) {//then retrieve only last part for local file name
-                                Log.d(getTag(), String.format("onAllDownloadsFinished: \t\t%s:\"%s\" is a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.TOML_FILE, s_toml_file_remote));
+                                Timber.d(String.format("onAllDownloadsFinished: \t\t%s:\"%s\" is a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.TOML_FILE, s_toml_file_remote));
                                 s_toml_file_local = s_toml_file_remote.substring(s_toml_file_remote.lastIndexOf("/") + 1);
                             } else {
-                                Log.d(getTag(), String.format("onAllDownloadsFinished: \t\t%s:\"%s\" is NOT a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.TOML_FILE, s_toml_file_remote));
+                                Timber.d(String.format("onAllDownloadsFinished: \t\t%s:\"%s\" is NOT a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.TOML_FILE, s_toml_file_remote));
                                 s_toml_file_remote = s_remote_gpkg_bundle + "/" + s_toml_file_remote;
                             }
-                            Log.d(getTag(), String.format("onAllDownloadsFinished: \t\tlocal: \"%s\"; remote: \"%s\"", s_toml_file_local, s_toml_file_remote));
+                            Timber.d(String.format("onAllDownloadsFinished: \t\tlocal: \"%s\"; remote: \"%s\"", s_toml_file_local, s_toml_file_remote));
                             final File f_gpkg_bundle__toml = new File(f_gpkg_bundle.getPath(), s_toml_file_local);
                             if (f_gpkg_bundle__toml.exists())
                                 f_gpkg_bundle__toml.delete();
@@ -750,22 +742,22 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
                             //build gpkg-bundle geopcackage file-download specs from version.props and queue them up
                             bundle.putBoolean("DOWNLOAD", true);
                             s_prop_val = Files.getPropsFileProperty(f_gpkg_bundle_ver_props, Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES);
-                            Log.d(getTag(), String.format("onAllDownloadsFinished: version props (file %s): %s = \"%s\"", f_gpkg_bundle_ver_props.getCanonicalPath(), Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, s_prop_val));
+                            Timber.d(String.format("onAllDownloadsFinished: version props (file %s): %s = \"%s\"", f_gpkg_bundle_ver_props.getCanonicalPath(), Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, s_prop_val));
                             String[] s_list_gpkg_files = s_prop_val.split(",");
                             if (s_list_gpkg_files != null && s_list_gpkg_files.length > 0) {
                                 for (int i = 0; i < s_list_gpkg_files.length; i++) {
                                     String
                                         s_gpkg_file_remote = s_list_gpkg_files[i],
                                         s_gpkg_file_local = s_gpkg_file_remote;
-                                    Log.d(getTag(), String.format("onAllDownloadsFinished: \t%s[%d]=\"%s\"", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, i, s_gpkg_file_remote));
+                                    Timber.d(String.format("onAllDownloadsFinished: \t%s[%d]=\"%s\"", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, i, s_gpkg_file_remote));
                                     if (HTTP.isValidUrl(s_gpkg_file_remote)) {//then retrieve only last part for local file name
-                                        Log.d(getTag(), String.format("onAllDownloadsFinished: \t\t%s[%d]:\"%s\" is a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, i, s_gpkg_file_remote));
+                                        Timber.d(String.format("onAllDownloadsFinished: \t\t%s[%d]:\"%s\" is a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, i, s_gpkg_file_remote));
                                         s_gpkg_file_local = s_gpkg_file_remote.substring(s_gpkg_file_remote.lastIndexOf("/") + 1);
                                     } else {
-                                        Log.w(getTag(), String.format("onAllDownloadsFinished: \t\t%s[%d]:\"%s\" is NOT a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, i, s_gpkg_file_remote));
+                                        Timber.tag(getTag()).w(String.format("onAllDownloadsFinished: \t\t%s[%d]:\"%s\" is NOT a valid uri", Constants.Strings.GPKG_BUNDLE.VERSION_PROPS.PROP.GPKG_FILES, i, s_gpkg_file_remote));
                                         s_gpkg_file_remote = s_remote_gpkg_bundle + "/" + s_gpkg_file_remote;
                                     }
-                                    Log.d(getTag(), String.format("onAllDownloadsFinished: \t\tlocal: \"%s\"; remote: \"%s\"", s_gpkg_file_local, s_gpkg_file_remote));
+                                    Timber.d(String.format("onAllDownloadsFinished: \t\tlocal: \"%s\"; remote: \"%s\"", s_gpkg_file_local, s_gpkg_file_remote));
                                     final File f_gpkg_bundle__gpkg = new File(f_gpkg_bundle.getPath(), s_gpkg_file_local);
                                     if (f_gpkg_bundle__gpkg.exists())
                                         f_gpkg_bundle__gpkg.delete();
@@ -897,7 +889,7 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
     }
     private final HTTP.AsyncGet.ExecutorService m_gpkg_bundle_download_boostrapper = new HTTP.AsyncGet.ExecutorService(
         (runnable, threadPoolExecutor) -> {
-            Log.d(threadPoolExecutor.getClass().getCanonicalName(), String.format("rejectedExecution - %s", runnable.getClass().getCanonicalName()));
+            Timber.d(String.format("rejectedExecution - %s", runnable.getClass().getCanonicalName()));
         },
         new GpkgBundlePropertiesDownloadQueueObserver()
     );
@@ -919,7 +911,7 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
             int
                 n_succeeded = getSuccessfulDownloads().size(),
                 n_failed = getFailedDownloadExceptions().size();
-            Log.d(getTag(), String.format("onAllDownloadsFinished: all queued downloads have finished -%s%s", n_succeeded > 0 ? " " + n_succeeded + " succeeded" : "", n_failed > 0 ? " " + n_failed + " failed (with exceptions) " : " "));
+            Timber.d(String.format("onAllDownloadsFinished: all queued downloads have finished -%s%s", n_succeeded > 0 ? " " + n_succeeded + " succeeded" : "", n_failed > 0 ? " " + n_failed + " failed (with exceptions) " : " "));
 
             try {
                 StringBuilder sb_alert_msg = new StringBuilder();
@@ -988,7 +980,7 @@ public class InstallGpkgBundleActivity extends AppCompatActivity {
 
     private final HTTP.AsyncGet.ExecutorService m_gpkg_bundle_file_downloader = new HTTP.AsyncGet.ExecutorService(
         (runnable, threadPoolExecutor) -> {
-            Log.d(threadPoolExecutor.getClass().getCanonicalName(), String.format("rejectedExecution - %s", runnable.getClass().getCanonicalName()));
+            Timber.d(String.format("rejectedExecution - %s", runnable.getClass().getCanonicalName()));
         },
         new GpkgBundleFileDownloadQueueObserver()
     );

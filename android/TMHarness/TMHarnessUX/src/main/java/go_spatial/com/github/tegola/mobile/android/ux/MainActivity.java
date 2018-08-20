@@ -90,6 +90,7 @@ import go_spatial.com.github.tegola.mobile.android.controller.utils.HTTP;
 import go_spatial.com.github.tegola.mobile.android.ux.Constants.REQUEST_CODES;
 import go_spatial.com.github.tegola.mobile.android.ux.Constants.Strings;
 import go_spatial.com.github.tegola.mobile.android.controller.Constants;
+import timber.log.Timber;
 
 public class MainActivity
         extends LocationUpdatesManager.LocationUpdatesBrokerActivity
@@ -291,7 +292,7 @@ public class MainActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate: entered");
+        Timber.d("onCreate: entered");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -341,9 +342,9 @@ public class MainActivity
 
         if (savedInstanceState != null) {
             m_controller_running = savedInstanceState.getBoolean(SAVE_INSTANCE_ARG__CTRLR_RUNNING, false);
-            Log.d(TAG, String.format("onCreate: savedInstanceState.getBoolean(SAVE_INSTANCE_ARG__CTRLR_RUNNING)==%b", m_controller_running));
+            Timber.d("onCreate: savedInstanceState.getBoolean(SAVE_INSTANCE_ARG__CTRLR_RUNNING)==%b", m_controller_running);
             mvstate = MAPVIEW_STATE.ordinal_map.get(savedInstanceState.getInt(SAVE_INSTANCE_ARG__MAPVIEW_STATE, MAPVIEW_STATE.STREAM_CLOSED.ordinal()));
-            Log.d(TAG, String.format("onCreate: savedInstanceState.getBoolean(SAVE_INSTANCE_ARG__MAPVIEW_STATE)==%s", mvstate.name()));
+            Timber.d("onCreate: savedInstanceState.getBoolean(SAVE_INSTANCE_ARG__MAPVIEW_STATE)==%s", mvstate.name());
         }
 
         //set title to build version
@@ -403,7 +404,7 @@ public class MainActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        Log.d(TAG, String.format("onSaveInstanceState: outState.putBoolean(SAVE_INSTANCE_ARG__CTRLR_RUNNING, %b) - and mvstate is %s", m_controller_running, mvstate.name()));
+        Timber.d("onSaveInstanceState: outState.putBoolean(SAVE_INSTANCE_ARG__CTRLR_RUNNING, %b) - and mvstate is %s", m_controller_running, mvstate.name());
         outState.putBoolean(SAVE_INSTANCE_ARG__CTRLR_RUNNING, m_controller_running);
         outState.putInt(SAVE_INSTANCE_ARG__MAPVIEW_STATE, mvstate.ordinal());
         super.onSaveInstanceState(outState);
@@ -411,33 +412,33 @@ public class MainActivity
 
     @Override
     protected void onResume() {
-        Log.d(TAG, "onResume: entered");
+        Timber.d("onResume: entered");
         //now queue up initial automated UI actions
         new Handler().postDelayed(() -> {
             //get mbgl config shared prefs
             if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.getValue() == null) {
-                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_connect_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.toString(), BuildConfig.mbgl_http_connect_timeout));
+                Timber.d("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_connect_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.toString(), BuildConfig.mbgl_http_connect_timeout);
                 SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.setValue(BuildConfig.mbgl_http_connect_timeout);
             }
             m_edt_val_http_client_cfg__connect_timeout.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.getValue()));
             if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.getValue() == null) {
-                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_read_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.toString(), BuildConfig.mbgl_http_read_timeout));
+                Timber.d("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_read_timeout==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.toString(), BuildConfig.mbgl_http_read_timeout);
                 SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.setValue(BuildConfig.mbgl_http_read_timeout);
             }
             m_edt_val_http_client_cfg__read_timeout.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.getValue()));
             if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.getValue() == null) {
-                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_max_requests_per_host==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.toString(), BuildConfig.mbgl_http_max_requests_per_host));
+                Timber.d("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_max_requests_per_host==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.toString(), BuildConfig.mbgl_http_max_requests_per_host);
                 SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.setValue(BuildConfig.mbgl_http_max_requests_per_host);
             }
             m_edt_val_http_client_cfg__max_requests_per_host.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.getValue()));
             if (SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.getValue() == null) {
-                Log.d(TAG, String.format("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_cache_size==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.toString(), BuildConfig.mbgl_http_cache_size));
+                Timber.d("onResume.async.runnable.run: int shared pref %s is not set - default to BuildConfig.mbgl_http_cache_size==%d", SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.toString(), BuildConfig.mbgl_http_cache_size);
                 SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.setValue(BuildConfig.mbgl_http_cache_size);
             }
             m_edt_val_http_client_cfg__cache_size.setText(Integer.toString(SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.getValue()));
 
             boolean tile_source_is_local = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
-            Log.d(TAG, String.format("onResume.async.runnable.run: boolean shared pref %s is: %b", SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.toString(), tile_source_is_local));
+            Timber.d("onResume.async.runnable.run: boolean shared pref %s is: %b", SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.toString(), tile_source_is_local);
             int rb_val_mvt_source_sel = (
                 tile_source_is_local
                     ? R.id.rb_mvt_local_tile_source_sel
@@ -456,14 +457,14 @@ public class MainActivity
 
     @Override
     protected void onStop() {
-        Log.d(TAG, "onStop: entered");
+        Timber.d("onStop: entered");
         super.onStop();
 //        GoogleDriveFileDownloadManager.getInstance().disconnect_api_client();
     }
 
     @Override
     protected void onDestroy() {
-        Log.d(TAG, "onDestroy: ClientAPI.uninitClient(m_controllerClient)");
+        Timber.d("onDestroy: ClientAPI.uninitClient(m_controllerClient)");
         ClientAPI.uninitClient(m_controllerClient);
         super.onDestroy();
     }
@@ -507,17 +508,11 @@ public class MainActivity
             int etid = tv.getId();
             String s_val = tv.getText().toString().trim();
             Integer kc = keyEvent != null ? keyEvent.getKeyCode() : null;
-            String keycode = kc != null ? String.valueOf(kc) : "<NO_KEY_PRESSED>";
-            Log.d(
-                TAG,
-                String.format(
-                    "handleEditorAction__mvt_client_http_config: handling %s action keyevent.keycode %s for edittext id %s",
-                    actionId == EditorInfo.IME_NULL
-                        ? "EditorInfo.IME_NULL"
-                        : "EditorInfo.IME_ACTION_DONE",
-                    kc != null ? String.valueOf(kc) : "<NO_KEY_PRESSED>",
-                    getResources().getResourceName(etid)
-                )
+            Timber.d(
+                "handleEditorAction__mvt_client_http_config: handling %s action keyevent.keycode %s for edittext id %s",
+                actionId == EditorInfo.IME_NULL? "EditorInfo.IME_NULL" : "EditorInfo.IME_ACTION_DONE",
+                kc != null ? String.valueOf(kc) : "<NO_KEY_PRESSED>",
+                getResources().getResourceName(etid)
             );
             if (actionId == EditorInfo.IME_ACTION_DONE || (kc != null && kc == KeyEvent.KEYCODE_ENTER)) {
                 boolean isvalid = false;
@@ -526,14 +521,11 @@ public class MainActivity
                     val = Integer.parseInt(s_val);
                     isvalid = val >= 0;
                 } catch (NumberFormatException e) {}
-                Log.d(
-                    TAG,
-                    String.format(
-                        "handleEditorAction__mvt_client_http_config: %s condition for %s value %d",
-                        isvalid ? "valid-value(commit)" : "invalid-value",
-                        getResources().getResourceName(etid),
-                        val
-                    )
+                Timber.d(
+                    "handleEditorAction__mvt_client_http_config: %s condition for %s value %d",
+                    isvalid ? "valid-value(commit)" : "invalid-value",
+                    getResources().getResourceName(etid),
+                    val
                 );
                 int default_val = -1;
                 SharedPrefsManager.INTEGER_SHARED_PREF integer_shared_pref = null;
@@ -566,6 +558,7 @@ public class MainActivity
             }
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(tv.getWindowToken(), 0);
+            return true;
         }
         return false;   //do not consume event in order to allow Android to do default handling
     }
@@ -580,13 +573,10 @@ public class MainActivity
         }
     )
     protected void handleFocusChange(View v, boolean hasFocus) {
-        Log.d(
-            TAG,
-            String.format(
-                "handleFocusChange: %s %s focus",
-                getResources().getResourceName(v.getId()),
-                hasFocus ? "got" : "lost"
-            )
+        Timber.d(
+            "handleFocusChange: %s %s focus",
+            getResources().getResourceName(v.getId()),
+            hasFocus ? "got" : "lost"
         );
         if (!hasFocus) {
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -605,7 +595,7 @@ public class MainActivity
             if (want_local_tile_source != setting_local_tile_source) {
                 SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.setValue(want_local_tile_source);
                 setting_local_tile_source = SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL.getValue();
-                Log.d(TAG, "handleCheckedChange__mvt_client_tile_source__local_or_remote: changed shared pref setting " + SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL + " value to: " + setting_local_tile_source);
+                Timber.d("handleCheckedChange__mvt_client_tile_source__local_or_remote: changed shared pref setting " + SharedPrefsManager.BOOLEAN_SHARED_PREF.TM_TILE_SOURCE__IS_LOCAL + " value to: " + setting_local_tile_source);
             }
             if (setting_local_tile_source) {//then get/update settings related to using local mvt server
                 //set srvr provider type (postGIS/geopackage) based on PersistentConfigSettingsManager.TM_PROVIDER__IS_GEOPACKAGE val
@@ -686,20 +676,20 @@ public class MainActivity
     @OnItemSelected(R.id.spinner_postgis_local_config_sel)
     protected void handleItemSelected__local_mvt_srvr_postgis_local_config(AdapterView<?> adapter, View view, int position, long id) {
         String s_sel_val = adapter.getItemAtPosition(position).toString();
-        Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
+        Timber.d("handleItemSelected__local_mvt_srvr_postgis_local_config: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
 
         String s_cached_config_sel__local_val = SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue();
-        Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value is \"" + s_cached_config_sel__local_val + "\"");
+        Timber.d("handleItemSelected__local_mvt_srvr_postgis_local_config: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value is \"" + s_cached_config_sel__local_val + "\"");
 
         boolean no_config_files = (s_sel_val == null || s_sel_val.compareTo(getString(R.string.srvr_config_type__local__no_config_files_found)) == 0);
         if (no_config_files) {
-            Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: no-config-files condition!");
+            Timber.d("handleItemSelected__local_mvt_srvr_postgis_local_config: no-config-files condition!");
             if (!s_cached_config_sel__local_val.isEmpty()) {
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value (currently \"" + s_cached_config_sel__local_val + "\")");
+                Timber.d("handleItemSelected__local_mvt_srvr_postgis_local_config: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value (currently \"" + s_cached_config_sel__local_val + "\")");
                 Toast.makeText(getApplicationContext(), "Clearing setting value for local config toml file selection since there are none available", Toast.LENGTH_SHORT).show();
                 SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.setValue("");
             } else {
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_config_sel__local_val + "\")");
+                Timber.d("handleItemSelected__local_mvt_srvr_postgis_local_config: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_config_sel__local_val + "\")");
             }
 
             //edit button obviously not applicable in this case
@@ -712,13 +702,12 @@ public class MainActivity
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
             alertDialogBuilder.setTitle(getString(R.string.srvr_config_type__local__no_config_files_found));
             alertDialogBuilder
-                    .setMessage(getString(R.string.srvr_config_type__local__no_config_files_found__alert_msg))
-                    .setCancelable(false)
-                    .setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dialog.dismiss();
-                        }
-                    });
+                .setMessage(getString(R.string.srvr_config_type__local__no_config_files_found__alert_msg))
+                .setCancelable(false)
+                .setPositiveButton(
+                    getString(R.string.OK),
+                    (dialog, id1) -> dialog.dismiss()
+                );
             AlertDialog alertDialog = alertDialogBuilder.create();
             alertDialog.show();
         } else {
@@ -727,10 +716,10 @@ public class MainActivity
                 Toast.makeText(getApplicationContext(), "Saving new setting value for local config toml file \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
                 //now update shared pref
                 SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.setValue(s_sel_val);
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value from \"" + s_cached_config_sel__local_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\"");
+                Timber.d("handleItemSelected__local_mvt_srvr_postgis_local_config: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value from \"" + s_cached_config_sel__local_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\"");
             } else {
                 //no change to shared pref val
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_postgis_local_config: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
+                Timber.d("handleItemSelected__local_mvt_srvr_postgis_local_config: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
             }
 
             //now update m_btn_config_sel_local__edit_file UI based on existence of current local config toml file selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue())
@@ -749,32 +738,30 @@ public class MainActivity
 
     @OnEditorAction(R.id.edt_postgis_remote_config_url)
     protected boolean handleEditorAction__local_mvt_srvr_postgis_remote_config_url(TextView tv, int actionId, KeyEvent keyEvent) {
-        if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL)
+        if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL) {
             validate__m_edt_val_config_sel__remote();
+            return true;
+        }
         return false;
     }
 
     @OnClick(R.id.btn_postgis_remote_config_url__apply_changes)
     protected void handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes(View v) {
         String s_remote_config_toml_sel_normalized = m_edt_postgis_remote_config_url.getText().toString();
-        Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: triggered remote config change with value " + (s_remote_config_toml_sel_normalized == null ? "null" : "\"" + s_remote_config_toml_sel_normalized + "\""));
-        if (s_remote_config_toml_sel_normalized == null) {
-            Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: normalizing remote config change (null) to \"\"");
-            s_remote_config_toml_sel_normalized = "";
-        }
+        Timber.d("handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: triggered remote config change with value " + (s_remote_config_toml_sel_normalized == null ? "null" : "\"" + s_remote_config_toml_sel_normalized + "\""));
         String s_old_config_sel__remote_val = SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue();
-        Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value is \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\"");
+        Timber.d("handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value is \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\"");
         if (s_old_config_sel__remote_val.compareTo(s_remote_config_toml_sel_normalized) != 0) {
             if (s_remote_config_toml_sel_normalized.isEmpty())
                 Toast.makeText(getApplicationContext(), "Clearing remote config toml file selection", Toast.LENGTH_SHORT).show();
             else
                 Toast.makeText(getApplicationContext(), "Saving new setting value for remote config toml file https://" + s_remote_config_toml_sel_normalized, Toast.LENGTH_SHORT).show();
             SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.setValue(s_remote_config_toml_sel_normalized);
-            Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " value from \"" + s_old_config_sel__remote_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\"");
+            Timber.d("handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " value from \"" + s_old_config_sel__remote_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\"");
             m_btn_postgis_remote_config_url__apply_changes.setEnabled(false);
         } else {
             //no change to share pref val - do nothing other than log
-            Log.d(TAG, "handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\") since normalized new value (\"" + s_remote_config_toml_sel_normalized + "\") is no different");
+            Timber.d("handleClick__local_mvt_srvr_postgis_remote_config_url__apply_changes: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue() + "\") since normalized new value (\"" + s_remote_config_toml_sel_normalized + "\") is no different");
         }
         synchronize_edittext_config_remote();
     }
@@ -782,20 +769,20 @@ public class MainActivity
     @OnItemSelected(R.id.spinner_gpkg_bundle_sel)
     protected void handleItemSelected__local_mvt_srvr_gpkgbundle(AdapterView<?> adapter, View view, int position, long id) {
         String s_sel_val = adapter.getItemAtPosition(position).toString();
-        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
+        Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
 
         String s_cached_gpkg_bundle_val = SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue();
-        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_val + "\"");
+        Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_val + "\"");
 
         boolean no_gpkg_bundles = (s_sel_val == null || s_sel_val.compareTo(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed)) == 0);
         if (no_gpkg_bundles) {
-            Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: no-gpkg-bundles condition!");
+            Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle: no-gpkg-bundles condition!");
             if (!s_cached_gpkg_bundle_val.isEmpty()) {
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_val + "\")");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_val + "\")");
                 Toast.makeText(getApplicationContext(), "Clearing setting value for geopackage-bundle selection since there are none installed", Toast.LENGTH_SHORT).show();
                 SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.setValue("");
             } else {
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_val + "\")");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_val + "\")");
             }
 
             m_btn_local_mvt_srvr_ctrl.setEnabled(false);
@@ -804,19 +791,19 @@ public class MainActivity
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
             alertDialogBuilder.setTitle(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed));
             alertDialogBuilder
-                    .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed__alert_msg))
-                    .setCancelable(false)
-                    .setNegativeButton(
-                            getString(R.string.cancel),
-                            (dialog, id1) -> dialog.dismiss()
-                    )
-                    .setPositiveButton(
-                            getString(R.string.OK),
-                            (dialog, id12) -> {
-                                startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
-                                dialog.dismiss();
-                            }
-                    );
+                .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundles_installed__alert_msg))
+                .setCancelable(false)
+                .setNegativeButton(
+                        getString(R.string.cancel),
+                        (dialog, id1) -> dialog.dismiss()
+                )
+                .setPositiveButton(
+                        getString(R.string.OK),
+                        (dialog, id12) -> {
+                            startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
+                            dialog.dismiss();
+                        }
+                );
             AlertDialog alertDialog = alertDialogBuilder.create();
             alertDialog.show();
         } else {
@@ -825,10 +812,10 @@ public class MainActivity
                 Toast.makeText(getApplicationContext(), "Saving new setting value for geopackage-bundle \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
                 //now update shared pref
                 SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.setValue(s_sel_val);
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\"");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\"");
             } else {
                 //no change to shared pref val
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
             }
 
             //now update UI based on existence of current local geopackage-bundle selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE__SELECTION.getValue())
@@ -851,20 +838,20 @@ public class MainActivity
     @OnItemSelected(R.id.spinner_gpkg_bundle_props_sel)
     protected void handleItemSelected__local_mvt_srvr_gpkgbundle_props(AdapterView<?> adapter, View view, int position, long id) {
         String s_sel_val = adapter.getItemAtPosition(position).toString();
-        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
+        Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle_props: triggered item selection @ position " + position + " with value " + (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
 
         String s_cached_gpkg_bundle_config_val = SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue();
-        Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_config_val + "\"");
+        Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle_props: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " current value is \"" + s_cached_gpkg_bundle_config_val + "\"");
 
         boolean no_gpkg_bundle_cfg = (s_sel_val == null);
         if (no_gpkg_bundle_cfg) {
-            Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: no-gpkg-no_gpkg_bundle_cfg condition!");
+            Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle_props: no-gpkg-no_gpkg_bundle_cfg condition!");
             if (!s_cached_gpkg_bundle_config_val.isEmpty()) {
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_config_val + "\")");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle_props: clearing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (currently \"" + s_cached_gpkg_bundle_config_val + "\")");
                 Toast.makeText(getApplicationContext(), "Clearing setting value for geopackage-bundle config selection since there are none installed", Toast.LENGTH_SHORT).show();
                 SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.setValue("");
             } else {
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_config_val + "\")");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle_props: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " since it is already cleared (value is \"" + s_cached_gpkg_bundle_config_val + "\")");
             }
 
             m_btn_local_mvt_srvr_ctrl.setEnabled(false);
@@ -873,19 +860,19 @@ public class MainActivity
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
             alertDialogBuilder.setTitle(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundle_props_installed));
             alertDialogBuilder
-                    .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundle_configs_installed__alert_msg))
-                    .setCancelable(false)
-                    .setNegativeButton(
-                            getString(R.string.cancel),
-                            (dialog, id1) -> dialog.dismiss()
-                    )
-                    .setPositiveButton(
-                            getString(R.string.OK),
-                            (dialog, id12) -> {
-                                startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
-                                dialog.dismiss();
-                            }
-                    );
+                .setMessage(getString(R.string.srvr_provider_type__gpkg__no_geopackage_bundle_configs_installed__alert_msg))
+                .setCancelable(false)
+                .setNegativeButton(
+                    getString(R.string.cancel),
+                    (dialog, id1) -> dialog.dismiss()
+                )
+                .setPositiveButton(
+                    getString(R.string.OK),
+                    (dialog, id12) -> {
+                        startActivityForResult(new Intent(MainActivity.this, InstallGpkgBundleActivity.class), REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE);
+                        dialog.dismiss();
+                    }
+                );
             AlertDialog alertDialog = alertDialogBuilder.create();
             alertDialog.show();
         } else {
@@ -894,10 +881,10 @@ public class MainActivity
                 Toast.makeText(getApplicationContext(), "Saving new setting value for geopackage-bundle config \"" + s_sel_val + "\" selection", Toast.LENGTH_SHORT).show();
                 //now update shared pref
                 SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.setValue(s_sel_val);
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_config_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\"");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle_props: changed setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value from \"" + s_cached_gpkg_bundle_config_val + "\" to \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\"");
             } else {
                 //no change to shared pref val
-                Log.d(TAG, "handleItemSelected__local_mvt_srvr_gpkgbundle_props: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
+                Timber.d("handleItemSelected__local_mvt_srvr_gpkgbundle_props: skipping change to shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.toString() + " value (\"" + SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue() + "\") since new value (\"" + s_sel_val + "\") is no different");
             }
 
             //now update UI based on existence of current local geopackage-bundle config selection setting (SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue())
@@ -918,20 +905,20 @@ public class MainActivity
     @OnItemSelected(R.id.spinner_remote_tile_server_sel)
     protected void handleItemSelected__remote_mvt_srvr(AdapterView<?> adapter, View view, int position, long id) {
         String s_sel_val = adapter.getItemAtPosition(position).toString();
-        Log.d(TAG, String.format("handleItemSelected_remotetileserver: triggered item selection @ position %d with value %s", position, (s_sel_val == null ? "null" : "\"" + s_sel_val + "\"")));
+        Timber.d("handleItemSelected_remotetileserver: triggered item selection @ position %d with value %s", position, (s_sel_val == null ? "null" : "\"" + s_sel_val + "\""));
 
         String s_cached_sel_canon_remote_tile_server = SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue();
-        Log.d(TAG, String.format("handleItemSelected_remotetileserver: shared pref setting %s current value is \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
+        Timber.d("handleItemSelected_remotetileserver: shared pref setting %s current value is \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server);
 
         boolean no_remote_tile_srvr_sel = (s_sel_val == null);
         if (no_remote_tile_srvr_sel) {
-            Log.d(TAG, "handleItemSelected_remotetileserver: no_remote_tile_srvr_sel condition!");
+            Timber.d("handleItemSelected_remotetileserver: no_remote_tile_srvr_sel condition!");
             if (!s_cached_sel_canon_remote_tile_server.isEmpty()) {
-                Log.d(TAG, String.format("handleItemSelected_remotetileserver: clearing shared pref setting %s value (currently \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
+                Timber.d("handleItemSelected_remotetileserver: clearing shared pref setting %s value (currently \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server);
                 Toast.makeText(getApplicationContext(), "Clearing setting value for canonical remote tile server selection since there are none available", Toast.LENGTH_SHORT).show();
                 SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.setValue("");
             } else {
-                Log.d(TAG, String.format("handleItemSelected_remotetileserver: skipping change to shared pref setting %s since it is already cleared (value is \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server));
+                Timber.d("handleItemSelected_remotetileserver: skipping change to shared pref setting %s since it is already cleared (value is \"%s\")", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server);
             }
 
             m_btn_stream_tiles_from_remote.setEnabled(false);
@@ -939,12 +926,12 @@ public class MainActivity
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
             alertDialogBuilder.setTitle(getString(R.string.no_valid_canonical_remote_tile_server_urls_found));
             alertDialogBuilder
-                    .setMessage(getString(R.string.no_valid_canonical_remote_tile_server_urls_found__alert_msg))
-                    .setCancelable(false)
-                    .setNeutralButton(
-                            getString(R.string.OK),
-                            (dialog, id1) -> dialog.dismiss()
-                    );
+                .setMessage(getString(R.string.no_valid_canonical_remote_tile_server_urls_found__alert_msg))
+                .setCancelable(false)
+                .setNeutralButton(
+                    getString(R.string.OK),
+                    (dialog, id1) -> dialog.dismiss()
+                );
             AlertDialog alertDialog = alertDialogBuilder.create();
             alertDialog.show();
         } else {
@@ -953,10 +940,10 @@ public class MainActivity
                 Toast.makeText(getApplicationContext(), String.format("Saving new setting value for remote tile server \"%s\" selection", s_sel_val), Toast.LENGTH_SHORT).show();
                 //now update shared pref
                 SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.setValue(s_sel_val);
-                Log.d(TAG, String.format("handleItemSelected_remotetileserver: changed setting %s value from \"%s\" to \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server, SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue()));
+                Timber.d("handleItemSelected_remotetileserver: changed setting %s value from \"%s\" to \"%s\"", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), s_cached_sel_canon_remote_tile_server, SharedPrefsManager.STRING_SHARED_PREF.TM_PROVIDER__GPKG_BUNDLE_PROPS__SELECTION.getValue());
             } else {
                 //no change to shared pref val
-                Log.d(TAG, String.format("handleItemSelected_remotetileserver: skipping change to shared pref setting %s value (\"%s\") since new value (\"%s\") is no different", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(), s_sel_val));
+                Timber.d("handleItemSelected_remotetileserver: skipping change to shared pref setting %s value (\"%s\") since new value (\"%s\") is no different", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(), s_sel_val);
             }
 
             m_btn_stream_tiles_from_remote.setEnabled(true);
@@ -993,9 +980,9 @@ public class MainActivity
             final String final_root_url = root_url, final_endpoint = endpoint, final_url = final_root_url + final_endpoint;
             //validate url first!
             if (HTTP.isValidUrl(final_url)) {
-                Log.d(TAG, "handleClick__remote_mvt_srvr__open_stream: root_url==\"" + final_root_url + "\"; endpoint==\"" + final_endpoint + "\"");
+                Timber.d("handleClick__remote_mvt_srvr__open_stream: root_url==\"" + final_root_url + "\"; endpoint==\"" + final_endpoint + "\"");
                 if (!root_url.isEmpty() && !endpoint.isEmpty()) {
-                    Log.d(TAG, "handleClick__remote_mvt_srvr__open_stream: requesting capabilities from " + final_root_url);
+                    Timber.d("handleClick__remote_mvt_srvr__open_stream: requesting capabilities from " + final_root_url);
                     mvstate = MAPVIEW_STATE.OPENING_STREAM__REMOTE;
                     new Handler().postDelayed(
                             () -> m_controllerClient.mvt_server__rest_api__get_json(
@@ -1011,12 +998,12 @@ public class MainActivity
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.alert_dialog));
                 alertDialogBuilder.setTitle("Cannot fetch from remote tile server!");
                 alertDialogBuilder
-                        .setMessage("Malformed remote tile server URL: \"" + final_url + "\"")
-                        .setCancelable(false)
-                        .setPositiveButton(
-                                getString(R.string.OK),
-                                (dialog, id) -> dialog.dismiss()
-                        );
+                    .setMessage("Malformed remote tile server URL: \"" + final_url + "\"")
+                    .setCancelable(false)
+                    .setPositiveButton(
+                        getString(R.string.OK),
+                        (dialog, id) -> dialog.dismiss()
+                    );
                 AlertDialog alertDialog = alertDialogBuilder.create();
                 alertDialog.show();
                 return;
@@ -1043,7 +1030,7 @@ public class MainActivity
         }
 
         //2.1 remove current entries from spinner_remote_tile_server dataAdapter
-        Log.d(TAG, "synchronize_spinner_remote_tile_server: clearing spinner items");
+        Timber.d("synchronize_spinner_remote_tile_server: clearing spinner items");
         m_spinner_val_remote_tile_server__items.clear();
 
         if (s_canon_remote_srvrs.length > 0) {//found canon remote tile servers
@@ -1053,24 +1040,24 @@ public class MainActivity
                 if (s_url != null)
                     s_url = s_url.trim();
                 if (s_url != null && !s_url.isEmpty() && HTTP.isValidUrl(s_url)) {
-                    Log.d(TAG, String.format("synchronize_spinner_remote_tile_server: found valid canon remote tile server url \"%s\", adding it to spinner_remote_tile_server data adapter!", s_url));
+                    Timber.d("synchronize_spinner_remote_tile_server: found valid canon remote tile server url \"%s\", adding it to spinner_remote_tile_server data adapter!", s_url);
                     m_spinner_val_remote_tile_server__items.add(s_url);
                 } else {
-                    Log.d(TAG, String.format("synchronize_spinner_remote_tile_server: \"%s\" is not a valid url... will NOT be added to spinner_remote_tile_server", s_url));
+                    Timber.d("synchronize_spinner_remote_tile_server: \"%s\" is not a valid url... will NOT be added to spinner_remote_tile_server", s_url);
                 }
             }
         }
         if (m_spinner_val_remote_tile_server__items.size() == 0) {//no valid canon remote server urls found
             //2.2 add "not found" item @ position 0
             String s_no_valid_canonical_remote_tile_server_urls_found = getString(R.string.no_valid_canonical_remote_tile_server_urls_found);
-            Log.d(TAG, String.format("synchronize_spinner_remote_tile_server: no valid canonical remote tile server URLs! adding \"%s\" to spinner items", s_no_valid_canonical_remote_tile_server_urls_found));
+            Timber.d("synchronize_spinner_remote_tile_server: no valid canonical remote tile server URLs! adding \"%s\" to spinner items", s_no_valid_canonical_remote_tile_server_urls_found);
             m_spinner_val_gpkg_bundle_props__items.add(s_no_valid_canonical_remote_tile_server_urls_found);
         }
 
         //3. reconcile ConfigSettings.STRING_CONFIG_SETTING.TM_TILE_SOURCE__REMOTE setting with m_spinner_val_remote_tile_server items and update selection as necessary
         int i_sel_pos = m_spinner_val_remote_tile_server__dataadapter.getPosition(SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue());
         if (i_sel_pos != -1) {
-            Log.d(TAG, String.format("synchronize_spinner_remote_tile_server: synchronizing shared pref setting %s current value \"%s\" spinner item selection to existing item position %d", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(), i_sel_pos));
+            Timber.d("synchronize_spinner_remote_tile_server: synchronizing shared pref setting %s current value \"%s\" spinner item selection to existing item position %d", SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.toString(), SharedPrefsManager.STRING_SHARED_PREF.TM_TILE_SOURCE__REMOTE.getValue(), i_sel_pos);
         } else {
             //note that we must reset i_sel_pos to 0 here since it will be assigned -1 if we are here
             i_sel_pos = 0;
@@ -1205,7 +1192,7 @@ public class MainActivity
         File f_config_toml = new File(getFilesDir().getPath() + "/" + config_filename);
         if (f_config_toml.exists()) {
             try {
-                Log.d(TAG, "edit_local_config_file: " + f_config_toml.getPath() + " exists; starting ConfigFileEditorActivity for result...");
+                Timber.d("edit_local_config_file: " + f_config_toml.getPath() + " exists; starting ConfigFileEditorActivity for result...");
                 Intent intent_edit_config_toml = new Intent(getApplicationContext(), ConfigFileEditorActivity.class);
                 intent_edit_config_toml.putExtra(Strings.EDITOR_INTENT_EXTRAS.FILENAME, config_filename);
                 startActivityForResult(intent_edit_config_toml, REQUEST_CODES.REQUEST_CODE__EDIT_TOML_FILE);
@@ -1215,7 +1202,7 @@ public class MainActivity
             }
         } else {
             String s_err = f_config_toml.getPath() + " does not exist! nothing to edit/view";
-            Log.e(TAG, "edit_local_config_file: " + s_err);
+            Timber.e("edit_local_config_file: " + s_err);
             Toast.makeText(this, s_err, Toast.LENGTH_LONG).show();
         }
     }
@@ -1304,33 +1291,32 @@ public class MainActivity
         File[] config_toml_files = f_filesDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".toml"));
 
         //2.1 remove current entries from m_spinner_postgis_local_config_sel dataAdapter
-        Log.d(TAG, "synchronize_spinner_local_config: clearing spinner items");
+        Timber.d("synchronize_spinner_local_config: clearing spinner items");
         m_spinner_val_local_config__items.clear();
 
         if (config_toml_files.length > 0) {//found local config.toml files
             //2.2 add found config.toml filenames into m_spinner_postgis_local_config_sel dataAdapter
             for (int i = 0; i < config_toml_files.length; i++) {
                 final String config_toml_filename = config_toml_files[i].getName();
-                Log.d(TAG, "synchronize_spinner_local_config: found local config '.toml' file: " + config_toml_filename + " - adding it to spinner items");
+                Timber.d("synchronize_spinner_local_config: found local config '.toml' file: " + config_toml_filename + " - adding it to spinner items");
                 //add this config.toml filename to spinner (drop-down) for local config file selection
                 m_spinner_val_local_config__items.add(config_toml_filename);
             }
         } else {//no local config.toml files found
             //2.2 add "not found" item @ position 0
             String s_config_sel__local_val__no_config_files_found = getString(R.string.srvr_config_type__local__no_config_files_found);
-            Log.d(TAG, "synchronize_spinner_local_config: no local config '.toml' files found! adding \"" + s_config_sel__local_val__no_config_files_found + "\" to spinner items");
+            Timber.d("synchronize_spinner_local_config: no local config '.toml' files found! adding \"" + s_config_sel__local_val__no_config_files_found + "\" to spinner items");
             m_spinner_val_local_config__items.add(s_config_sel__local_val__no_config_files_found);
         }
 
         //3. reconcile ConfigSettings.STRING_CONFIG_SETTING.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION setting with m_spinner_val_local_config__dataadapter items and update selection as necessary
         int i_sel_pos = m_spinner_val_local_config__dataadapter.getPosition(SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue());
         if (i_sel_pos != -1) {
-            Log.d(TAG, "synchronize_spinner_local_config: synchronizing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\" spinner item selection to existing item position " + i_sel_pos);
+            Timber.d("synchronize_spinner_local_config: synchronizing shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue() + "\" spinner item selection to existing item position " + i_sel_pos);
         } else {
             //note that we must reset i_sel_pos to 0 here since it will be assigned -1 if we are here
             i_sel_pos = 0;
-            Log.d(TAG,
-                    "synchronize_spinner_local_config: cannot synchronize shared prefs setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue()
+            Timber.d("synchronize_spinner_local_config: cannot synchronize shared prefs setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.toString() + " current value \"" + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue()
                     + "\" to spinner item selection since spinner does not currently have a selectable item with that value; setting spinner selected item position to " + i_sel_pos + " for value \"" + m_spinner_val_local_config__items.get(i_sel_pos) + "\"");
         }
 
@@ -1362,12 +1348,12 @@ public class MainActivity
     private void validate__m_edt_val_config_sel__remote() {
         String s_old_config_sel__remote_val = SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.getValue();
         String s_config_sel__remote_val__proposted = m_edt_postgis_remote_config_url.getText().toString();
-        Log.d(TAG, "validate__m_edt_val_config_sel__remote: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value is \"" + s_old_config_sel__remote_val + "\"");
+        Timber.d("validate__m_edt_val_config_sel__remote: shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value is \"" + s_old_config_sel__remote_val + "\"");
         if (s_old_config_sel__remote_val.compareTo(s_config_sel__remote_val__proposted) == 0) {
-            Log.d(TAG, "validate__m_edt_val_config_sel__remote: m_edt_postgis_remote_config_url value is no different than shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
+            Timber.d("validate__m_edt_val_config_sel__remote: m_edt_postgis_remote_config_url value is no different than shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
             m_btn_postgis_remote_config_url__apply_changes.setEnabled(false);
         } else {
-            Log.d(TAG, "validate__m_edt_val_config_sel__remote: m_edt_postgis_remote_config_url proposed value \"" + s_config_sel__remote_val__proposted + "\" differs from shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
+            Timber.d("validate__m_edt_val_config_sel__remote: m_edt_postgis_remote_config_url proposed value \"" + s_config_sel__remote_val__proposted + "\" differs from shared pref setting " + SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_REMOTE_CONFIG_TOML__SELECTION.toString() + " current value \"" + s_old_config_sel__remote_val + "\"");
             m_btn_postgis_remote_config_url__apply_changes.setEnabled(true);
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(m_edt_postgis_remote_config_url.getWindowToken(), 0);
@@ -1384,11 +1370,11 @@ public class MainActivity
                     case RESULT_OK: {
                         final Uri file_uri = data.getData();
                         if (file_uri != null) {
-                            Log.d(TAG, "onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_OK -- selected local storage file uri \"" + file_uri + "\"; calling local__file__import() for this file uri...");
+                            Timber.d("onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_OK -- selected local storage file uri \"" + file_uri + "\"; calling local__file__import() for this file uri...");
                             try {
                                 final local__file__import__result result = local__file__import(file_uri);
                                 final String s_result_msg = (result.succeeded ? "Successfully imported" : "Failed to import") + " local storage file \"" + result.src_name + "\"";
-                                Log.d(TAG, "onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_OK -- " + s_result_msg);
+                                Timber.d("onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_OK -- " + s_result_msg);
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -1401,17 +1387,17 @@ public class MainActivity
                                 e.printStackTrace();
                             }
                         } else {
-                            Log.d(TAG, "onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_OK -- but selected local storage file uri is null; aborting import");
+                            Timber.d("onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_OK -- but selected local storage file uri is null; aborting import");
                         }
                         break;
                     }
                     case RESULT_CANCELED: {
-                        Log.i(TAG, "onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_CANCELED");
+                        Timber.i("onActivityResult: requestCode: REQUEST_CODE__SELECT_TOML_FILES_FOR_IMPORT__LOCAL_STORAGE | resultCode: RESULT_CANCELED");
                         super.onActivityResult(requestCode, resultCode, data);
                         break;
                     }
                     default: {
-                        Log.d(TAG, "onActivityResult: requestCode " + requestCode + ", resultCode " + resultCode);
+                        Timber.d("onActivityResult: requestCode " + requestCode + ", resultCode " + resultCode);
                         super.onActivityResult(requestCode, resultCode, data);
                     }
                 }
@@ -1500,18 +1486,18 @@ public class MainActivity
             case REQUEST_CODES.REQUEST_CODE__MANAGE_GPKG_BUNDLES: {
                 switch (resultCode) {
                     case ManageGpkgBundlesActivity.MNG_GPKG_BUNDLES_RESULT__CHANGED: {
-                        Log.i(TAG, "onActivityResult: requestCode: REQUEST_CODE__MANAGE_GPKG_BUNDLES | resultCode: MNG_GPKG_BUNDLES_RESULT__CHANGED");
+                        Timber.i("onActivityResult: requestCode: REQUEST_CODE__MANAGE_GPKG_BUNDLES | resultCode: MNG_GPKG_BUNDLES_RESULT__CHANGED");
                         synchronize_spinner_gpkg_bundle();
                         synchronize_spinner_gpkg_bundle_props();
                         break;
                     }
                     case ManageGpkgBundlesActivity.MNG_GPKG_BUNDLES_RESULT__UNCHANGED: {
-                        Log.i(TAG, "onActivityResult: requestCode: REQUEST_CODE__MANAGE_GPKG_BUNDLES | resultCode: MNG_GPKG_BUNDLES_RESULT__UNCHANGED");
+                        Timber.i("onActivityResult: requestCode: REQUEST_CODE__MANAGE_GPKG_BUNDLES | resultCode: MNG_GPKG_BUNDLES_RESULT__UNCHANGED");
                         super.onActivityResult(requestCode, resultCode, data);
                         break;
                     }
                     default: {
-                        Log.d(TAG, "onActivityResult: default case: requestCode " + requestCode + ", resultCode " + resultCode);
+                        Timber.d("onActivityResult: default case: requestCode " + requestCode + ", resultCode " + resultCode);
                         super.onActivityResult(requestCode, resultCode, data);
                         break;
                     }
@@ -1521,23 +1507,23 @@ public class MainActivity
             case REQUEST_CODES.REQUEST_CODE__INSTALL_GPKG_BUNDLE: {
                 switch (resultCode) {
                     case InstallGpkgBundleActivity.INSTALL_GPKG_BUNDLE_RESULT__SUCCESSFUL: {
-                        Log.i(TAG, "onActivityResult: requestCode: REQUEST_CODE__INSTALL_GPKG_BUNDLE | resultCode: INSTALL_GPKG_BUNDLE_RESULT__SUCCESSFUL");
+                        Timber.i("onActivityResult: requestCode: REQUEST_CODE__INSTALL_GPKG_BUNDLE | resultCode: INSTALL_GPKG_BUNDLE_RESULT__SUCCESSFUL");
                         synchronize_spinner_gpkg_bundle();
                         synchronize_spinner_gpkg_bundle_props();
                         break;
                     }
                     case InstallGpkgBundleActivity.INSTALL_GPKG_BUNDLE_RESULT__CANCELLED: {
-                        Log.i(TAG, "onActivityResult: requestCode: REQUEST_CODE__INSTALL_GPKG_BUNDLE | resultCode: INSTALL_GPKG_BUNDLE_RESULT__CANCELLED");
+                        Timber.i("onActivityResult: requestCode: REQUEST_CODE__INSTALL_GPKG_BUNDLE | resultCode: INSTALL_GPKG_BUNDLE_RESULT__CANCELLED");
                         super.onActivityResult(requestCode, resultCode, data);
                         break;
                     }
                     case InstallGpkgBundleActivity.INSTALL_GPKG_BUNDLE_RESULT__FAILED: {
-                        Log.i(TAG, "onActivityResult: requestCode: REQUEST_CODE__INSTALL_GPKG_BUNDLE | resultCode: INSTALL_GPKG_BUNDLE_RESULT__FAILED");
+                        Timber.i("onActivityResult: requestCode: REQUEST_CODE__INSTALL_GPKG_BUNDLE | resultCode: INSTALL_GPKG_BUNDLE_RESULT__FAILED");
                         super.onActivityResult(requestCode, resultCode, data);
                         break;
                     }
                     default: {
-                        Log.d(TAG, "onActivityResult: default case: requestCode " + requestCode + ", resultCode " + resultCode);
+                        Timber.d("onActivityResult: default case: requestCode " + requestCode + ", resultCode " + resultCode);
                         super.onActivityResult(requestCode, resultCode, data);
                         break;
                     }
@@ -1545,7 +1531,7 @@ public class MainActivity
                 break;
             }
             default: {
-                Log.d(TAG, "onActivityResult: default case: requestCode " + requestCode + ", resultCode " + resultCode);
+                Timber.d("onActivityResult: default case: requestCode " + requestCode + ", resultCode " + resultCode);
                 super.onActivityResult(requestCode, resultCode, data);
                 break;
             }
@@ -1564,11 +1550,11 @@ public class MainActivity
         InputStream inputstream_config_toml = null;
         boolean uselocalstorageprovider = getResources().getBoolean(R.bool.use_provider);
         if (uselocalstorageprovider) {
-            Log.d(TAG, "local__file__import: using storage access framework since API level (" + Build.VERSION.SDK_INT + ") of device >= 19");
+            Timber.d("local__file__import: using storage access framework since API level (" + Build.VERSION.SDK_INT + ") of device >= 19");
             Cursor cursor = this.getContentResolver().query(local_file_uri, null, null, null, null, null);
             try {
                 if (cursor == null) {
-                    Log.d(TAG, "local__file__import: getContentResolver().query() returned null cursor for uri " + local_file_uri.toString());
+                    Timber.d("local__file__import: getContentResolver().query() returned null cursor for uri " + local_file_uri.toString());
                 } else {
                     // moveToFirst() returns false if the cursor has 0 rows.  Very handy for
                     // "if there's anything to look at, look at it" conditionals.
@@ -1576,9 +1562,9 @@ public class MainActivity
                         // Note it's called "Display Name".  This is
                         // provider-specific, and might not necessarily be the file name.
                         result.src_name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                        Log.d(TAG, "local__file__import: cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME) returns display (file) name: " + result.src_name);
+                        Timber.d("local__file__import: cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME) returns display (file) name: " + result.src_name);
                     } else {
-                        Log.d(TAG, "local__file__import: cursor.moveToFirst() failed for uri " + local_file_uri.toString());
+                        Timber.d("local__file__import: cursor.moveToFirst() failed for uri " + local_file_uri.toString());
                     }
                 }
             } finally {
@@ -1586,7 +1572,7 @@ public class MainActivity
                     cursor.close();
             }
             if (result.src_name.isEmpty()) {
-                Log.d(TAG, "local__file__import: result.src_name is empty; parsing result.src_name manually from uri path " + result.src_path);
+                Timber.d("local__file__import: result.src_name is empty; parsing result.src_name manually from uri path " + result.src_path);
                 int i = result.src_path.lastIndexOf("/");
                 if (i == -1)
                     i = 0;
@@ -1594,29 +1580,29 @@ public class MainActivity
                     i += 1;
                 result.src_name = result.src_path.substring(i);
             }
-            Log.d(TAG, "local__file__import: using storage access framework content resolver to open inputstream from " + result.src_path + "...");
+            Timber.d("local__file__import: using storage access framework content resolver to open inputstream from " + result.src_path + "...");
             inputstream_config_toml = getContentResolver().openInputStream(local_file_uri);
         } else {
-            Log.d(TAG, "local__file__import: not using storage access framework since API level (" + Build.VERSION.SDK_INT + ") of device < 19");
+            Timber.d("local__file__import: not using storage access framework since API level (" + Build.VERSION.SDK_INT + ") of device < 19");
             File f_local = new File(result.src_path);
             result.src_name = f_local.getName();
-            Log.d(TAG, "local__file__import: opening inputstream from " + result.src_path + "...");
+            Timber.d("local__file__import: opening inputstream from " + result.src_path + "...");
             inputstream_config_toml = new FileInputStream(f_local);
         }
         if (inputstream_config_toml == null )
             throw new IOException("Failed to open inputstream to " + result.src_path);
         final int file_size_in_bytes = inputstream_config_toml.available();
         byte[] buf_raw_config_toml = new byte[file_size_in_bytes];
-        Log.d(TAG, "local__file__import: input file size is " + file_size_in_bytes + " bytes; reading...");
+        Timber.d("local__file__import: input file size is " + file_size_in_bytes + " bytes; reading...");
         inputstream_config_toml.read(buf_raw_config_toml);
         inputstream_config_toml.close();
-        Log.d(TAG, "local__file__import: writing " + file_size_in_bytes + " bytes to new file (result.src_name \"" + result.src_name + "\") in app files directory...");
+        Timber.d("local__file__import: writing " + file_size_in_bytes + " bytes to new file (result.src_name \"" + result.src_name + "\") in app files directory...");
         FileOutputStream f_outputstream_new_tegola_config_toml = openFileOutput(result.src_name, Context.MODE_PRIVATE);
         f_outputstream_new_tegola_config_toml.write(buf_raw_config_toml);
         f_outputstream_new_tegola_config_toml.close();
         File f_new_tegola_config_toml = new File(getFilesDir().getPath() + "/" + result.src_name);
         result.succeeded = f_new_tegola_config_toml.exists();
-        Log.d(TAG, "local__file__import: all done - " + (result.succeeded ? "successfully copied" : "failed to copy") + " " + result.src_name + " to app files directory");
+        Timber.d("local__file__import: all done - " + (result.succeeded ? "successfully copied" : "failed to copy") + " " + result.src_name + " to app files directory");
         return result;
     }
 
@@ -1631,7 +1617,7 @@ public class MainActivity
     @Override
     public void OnControllerRunning() {
         m_controller_running = true;
-        Log.d(TAG, "OnControllerRunning: set m_controller_running == " + m_controller_running);
+        Timber.d("OnControllerRunning: set m_controller_running == " + m_controller_running);
         try {
             m_tv_val_bin_ver.setText(TEGOLA_BIN.getInstance(getApplicationContext()).get_version_string());
         } catch (PackageManager.NameNotFoundException e) {
@@ -1764,68 +1750,68 @@ public class MainActivity
 
         JSONTokener jsonTokener = new JSONTokener(json);
         tegolaCapabilities.root_json_object = new JSONObject(jsonTokener);
-        Log.d(TAG, "parse_tegola_capabilities_json: json content is content is:\n" + tegolaCapabilities.root_json_object.toString());
+        Timber.d("parse_tegola_capabilities_json: json content is content is:\n" + tegolaCapabilities.root_json_object.toString());
         tegolaCapabilities.version = tegolaCapabilities.root_json_object.getString("version");
         if (tegolaCapabilities.version != null) {
-            Log.d(TAG, "parse_tegola_capabilities_json: got \"version\" == \"" + tegolaCapabilities.version + "\"");
+            Timber.d("parse_tegola_capabilities_json: got \"version\" == \"" + tegolaCapabilities.version + "\"");
         } else
             tegolaCapabilities.version = "";
         JSONArray json_maps = tegolaCapabilities.root_json_object.getJSONArray("maps");
         if (json_maps != null) {
             ArrayList<TegolaCapabilities.Parsed.Map> al_maps = null;
-            Log.d(TAG, "parse_tegola_capabilities_json: got \"maps\" JSONArray - contains " + json_maps.length() + " \"map\" JSON objects");
+            Timber.d("parse_tegola_capabilities_json: got \"maps\" JSONArray - contains " + json_maps.length() + " \"map\" JSON objects");
             if (json_maps.length() > 0) {
                 al_maps = new ArrayList<TegolaCapabilities.Parsed.Map>();
                 for (int i = 0; i < json_maps.length(); i++) {
                     JSONObject json_map = json_maps.getJSONObject(i);
                     if (json_map != null) {
-                        Log.d(TAG, "parse_tegola_capabilities_json: got JSONObject for \"maps\"[" + i + "]");
+                        Timber.d("parse_tegola_capabilities_json: got JSONObject for \"maps\"[" + i + "]");
                         TegolaCapabilities.Parsed.Map map = new TegolaCapabilities.Parsed.Map();
                         map.name = json_map.getString("name");
-                        Log.d(TAG, "parse_tegola_capabilities_json: \"maps\"[" + i + "].\"name\" == \"" + map.name + "\"");
+                        Timber.d("parse_tegola_capabilities_json: \"maps\"[" + i + "].\"name\" == \"" + map.name + "\"");
                         map.attribution = json_map.getString("attribution");
-                        Log.d(TAG, "parse_tegola_capabilities_json: \"maps\"[" + i + "].\"attribution\" == \"" + map.attribution + "\"");
+                        Timber.d("parse_tegola_capabilities_json: \"maps\"[" + i + "].\"attribution\" == \"" + map.attribution + "\"");
                         map.mbgl_style_json_url = s_tegola_tile_server_url__root + "/maps/" + map.name + "/style.json";
-                        Log.d(TAG, "parse_tegola_capabilities_json: mbgl_style url for map \"" + map.name + "\" is " + map.mbgl_style_json_url);
+                        Timber.d("parse_tegola_capabilities_json: mbgl_style url for map \"" + map.name + "\" is " + map.mbgl_style_json_url);
                         JSONArray jsonarray_map_center = json_map.getJSONArray("center");
                         if (jsonarray_map_center != null) {
-                            Log.d(TAG, "parse_tegola_capabilities_json: got \"center\" JSONArray - contains " + jsonarray_map_center.length() + " values");
+                            Timber.d("parse_tegola_capabilities_json: got \"center\" JSONArray - contains " + jsonarray_map_center.length() + " values");
                             if (jsonarray_map_center.length() == 3) {
                                 map.center.latitude = jsonarray_map_center.getDouble(1);
-                                Log.d(TAG, "parse_tegola_capabilities_json: got \"center\" latitude (pos 1) value: " + map.center.latitude);
+                                Timber.d("parse_tegola_capabilities_json: got \"center\" latitude (pos 1) value: " + map.center.latitude);
                                 map.center.longitude = jsonarray_map_center.getDouble(0);
-                                Log.d(TAG, "parse_tegola_capabilities_json: got \"center\" longitude (pos 0) value: " + map.center.longitude);
+                                Timber.d("parse_tegola_capabilities_json: got \"center\" longitude (pos 0) value: " + map.center.longitude);
                                 map.center.zoom = jsonarray_map_center.getDouble(2);
-                                Log.d(TAG, "parse_tegola_capabilities_json: got \"center\" zoom (pos 2) value: " + map.center.zoom);
+                                Timber.d("parse_tegola_capabilities_json: got \"center\" zoom (pos 2) value: " + map.center.zoom);
                             } else {
-                                Log.e(TAG, "parse_tegola_capabilities_json: \"center\" JSONArray contains " + jsonarray_map_center.length() + " values but 3 are required!");
+                                Timber.e("parse_tegola_capabilities_json: \"center\" JSONArray contains " + jsonarray_map_center.length() + " values but 3 are required!");
                             }
                         } else {
-                            Log.w(TAG, "parse_tegola_capabilities_json: tegola capabilities json map \"" + map.name + "\" does not contain \"center\" json object");
+                            Timber.tag(TAG).w("parse_tegola_capabilities_json: tegola capabilities json map \"" + map.name + "\" does not contain \"center\" json object");
                         }
                         JSONArray jsonarray_map_layers = json_map.getJSONArray("layers");
                         if (jsonarray_map_layers != null) {
-                            Log.d(TAG, "parse_tegola_capabilities_json: got \"layers\" JSONArray - contains " + jsonarray_map_layers.length() + " objects");
+                            Timber.d("parse_tegola_capabilities_json: got \"layers\" JSONArray - contains " + jsonarray_map_layers.length() + " objects");
                             if (jsonarray_map_layers.length() > 0) {
                                 ArrayList<TegolaCapabilities.Parsed.Map.Layer> al_layers = new ArrayList<TegolaCapabilities.Parsed.Map.Layer>();
-                                Log.d(TAG, "parse_tegola_capabilities_json: collating layers objects for inf(minzoom) and sup(maxzoom)...");
+                                Timber.d("parse_tegola_capabilities_json: collating layers objects for inf(minzoom) and sup(maxzoom)...");
                                 for (int j = 0; j < jsonarray_map_layers.length(); j++) {
                                     JSONObject json_layer = jsonarray_map_layers.getJSONObject(j);
                                     if (json_layer != null) {
-                                        Log.d(TAG, "parse_tegola_capabilities_json: got JSONObject for \"layers\"[" + j + "]");
+                                        Timber.d("parse_tegola_capabilities_json: got JSONObject for \"layers\"[" + j + "]");
                                         TegolaCapabilities.Parsed.Map.Layer layer = new TegolaCapabilities.Parsed.Map.Layer();
                                         layer.name = json_layer.getString("name");
-                                        Log.d(TAG, "parse_tegola_capabilities_json: \"layers\"[" + j + "].\"name\" == \"" + layer.name + "\"");
+                                        Timber.d("parse_tegola_capabilities_json: \"layers\"[" + j + "].\"name\" == \"" + layer.name + "\"");
                                         layer.minzoom = json_layer.getDouble("minzoom");
-                                        Log.d(TAG, "parse_tegola_capabilities_json: \"layers\"[" + j + "].\"minzoom\" == \"" + layer.minzoom + "\"");
+                                        Timber.d("parse_tegola_capabilities_json: \"layers\"[" + j + "].\"minzoom\" == \"" + layer.minzoom + "\"");
                                         if (tegolaCapabilities.parsed.maps_layers_minzoom == -1.0 || layer.minzoom < tegolaCapabilities.parsed.maps_layers_minzoom) {
-                                            Log.d(TAG, "parse_tegola_capabilities_json: found new minzoom == " + layer.minzoom);
+                                            Timber.d("parse_tegola_capabilities_json: found new minzoom == " + layer.minzoom);
                                             tegolaCapabilities.parsed.maps_layers_minzoom = layer.minzoom;
                                         }
                                         layer.maxzoom = json_layer.getDouble("maxzoom");
-                                        Log.d(TAG, "parse_tegola_capabilities_json: \"layers\"[" + j + "].\"maxzoom\" == \"" + layer.maxzoom + "\"");
+                                        Timber.d("parse_tegola_capabilities_json: \"layers\"[" + j + "].\"maxzoom\" == \"" + layer.maxzoom + "\"");
                                         if (tegolaCapabilities.parsed.maps_layers_maxzoom == -1.0 || layer.maxzoom > tegolaCapabilities.parsed.maps_layers_maxzoom) {
-                                            Log.d(TAG, "parse_tegola_capabilities_json: found new maxzoom == " + layer.maxzoom);
+                                            Timber.d("parse_tegola_capabilities_json: found new maxzoom == " + layer.maxzoom);
                                             tegolaCapabilities.parsed.maps_layers_maxzoom = layer.maxzoom;
                                         }
                                         al_layers.add(layer);
@@ -1836,18 +1822,18 @@ public class MainActivity
                         }
                         al_maps.add(map);
                     } else {
-                        Log.e(TAG, "parse_tegola_capabilities_json: tegola capabilities json does not have a map json object at index " + i + " of \"maps\" json array");
+                        Timber.e("parse_tegola_capabilities_json: tegola capabilities json does not have a map json object at index " + i + " of \"maps\" json array");
                     }
                 }
             } else {
-                Log.e(TAG, "parse_tegola_capabilities_json: tegola capabilities json \"maps\" json array does not contain any elements!");
+                Timber.e("parse_tegola_capabilities_json: tegola capabilities json \"maps\" json array does not contain any elements!");
             }
             tegolaCapabilities.parsed.maps = al_maps.toArray(new TegolaCapabilities.Parsed.Map[al_maps.size()]);
-            Log.d(TAG, "parse_tegola_capabilities_json: post-parse: tegolaCapabilities.parsed.maps contains " + tegolaCapabilities.parsed.maps.length + " elements");
-            Log.d(TAG, "parse_tegola_capabilities_json: post-parse: tegolaCapabilities.parsed.maps_layers_minzoom == " + tegolaCapabilities.parsed.maps_layers_minzoom);
-            Log.d(TAG, "parse_tegola_capabilities_json: post-parse: tegolaCapabilities.parsed.maps_layers_maxzoom == " + tegolaCapabilities.parsed.maps_layers_maxzoom);
+            Timber.d("parse_tegola_capabilities_json: post-parse: tegolaCapabilities.parsed.maps contains " + tegolaCapabilities.parsed.maps.length + " elements");
+            Timber.d("parse_tegola_capabilities_json: post-parse: tegolaCapabilities.parsed.maps_layers_minzoom == " + tegolaCapabilities.parsed.maps_layers_minzoom);
+            Timber.d("parse_tegola_capabilities_json: post-parse: tegolaCapabilities.parsed.maps_layers_maxzoom == " + tegolaCapabilities.parsed.maps_layers_maxzoom);
         } else {
-            Log.e(TAG, "parse_tegola_capabilities_json: tegola capabilities json does not contain \"maps\" json array!");
+            Timber.e("parse_tegola_capabilities_json: tegola capabilities json does not contain \"maps\" json array!");
         }
         return tegolaCapabilities;
     }
@@ -1857,8 +1843,17 @@ public class MainActivity
             mbgl_map_stop();
             runOnUiThread(
                 () -> {
-                    Log.d(TAG, "mbgl_map_start: swapping drawer content to MBGLFragment");
-                    MBGLFragment mbgl_frag = MBGLFragment.newInstance(tegolaCapabilities, BuildConfig.mbgl_debug_active);
+                    Timber.d("mbgl_map_start: swapping drawer content to MBGLFragment");
+                    MBGLFragment mbgl_frag = MBGLFragment.newInstance(
+                        tegolaCapabilities,
+                        new MBGLHttpConfig(
+                            SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CACHE_SIZE.getValue(),
+                            SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__CONNECT_TIMEOUT.getValue(),
+                            SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__MAX_REQ_PER_HOST.getValue(),
+                            SharedPrefsManager.INTEGER_SHARED_PREF.MBGL_CONFIG__READ_TIMEOUT.getValue()
+                        ),
+                        BuildConfig.mbgl_debug_active
+                    );
                     LocationUpdatesManager.newInstance(MainActivity.this, mbgl_frag);
                     getSupportFragmentManager()
                         .beginTransaction()
@@ -1868,11 +1863,11 @@ public class MainActivity
                             FRAG_DRAWER_CONTENT
                         )
                         .commit();
-                    Log.d(TAG, "mbgl_map_start: adding drawerlistener m_drawerlayout_main__DrawerToggle to m_drawerlayout");
+                    Timber.d("mbgl_map_start: adding drawerlistener m_drawerlayout_main__DrawerToggle to m_drawerlayout");
                     m_drawerlayout.addDrawerListener(m_drawerlayout_main__DrawerToggle);
-                    Log.d(TAG, "mbgl_map_start: attaching drawerhandle R.layout.drawer_handle to m_drawerlayout_content__drawer");
+                    Timber.d("mbgl_map_start: attaching drawerhandle R.layout.drawer_handle to m_drawerlayout_content__drawer");
                     m_drawer_handle = DrawerHandle.attach(m_drawerlayout_content__drawer, R.layout.drawer_handle, 0.95f);
-                    Log.d(TAG, "mbgl_map_start: unlocking drawer");
+                    Timber.d("mbgl_map_start: unlocking drawer");
                     m_drawerlayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                     m_drawer_handle.openDrawer();
                 }
@@ -1885,7 +1880,7 @@ public class MainActivity
 
     @Override
     public void OnMVTServerJSONRead(final String s_tegola_url_root, final String json_url_endpoint, final String json, final String purpose) {
-        Log.d(TAG, "OnMVTServerJSONRead: s_tegola_url_root: " + s_tegola_url_root + "; json_url_endpoint: " + json_url_endpoint + "; purpose: " + purpose);
+        Timber.d("OnMVTServerJSONRead: s_tegola_url_root: " + s_tegola_url_root + "; json_url_endpoint: " + json_url_endpoint + "; purpose: " + purpose);
         switch (json_url_endpoint) {
             case "/capabilities": {
                 try {
@@ -1949,22 +1944,22 @@ public class MainActivity
     private void mbgl_map_stop() {
         runOnUiThread(
             () -> {
-                Log.d(TAG, "mbgl_map_stop: locking drawer closed");
+                Timber.d("mbgl_map_stop: locking drawer closed");
                 if (m_drawer_handle != null) {
                     m_drawer_handle.closerDrawer();
-                    Log.d(TAG, "mbgl_map_stop: detaching drawer handle");
+                    Timber.d("mbgl_map_stop: detaching drawer handle");
                     m_drawer_handle.detach();
                     m_drawer_handle = null;
                     mvstate = MAPVIEW_STATE.STREAM_CLOSED;
                 } else {
-                    Log.d(TAG, "mbgl_map_stop: no (null) drawerhandle to detach!");
+                    Timber.d("mbgl_map_stop: no (null) drawerhandle to detach!");
                 }
                 m_drawerlayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-                Log.d(TAG, "mbgl_map_stop: removing drawer listener: m_drawerlayout_main__DrawerToggle");
+                Timber.d("mbgl_map_stop: removing drawer listener: m_drawerlayout_main__DrawerToggle");
                 m_drawerlayout.removeDrawerListener(m_drawerlayout_main__DrawerToggle);
                 Fragment frag_current = getSupportFragmentManager().findFragmentByTag(FRAG_DRAWER_CONTENT);
                 if (frag_current != null) {
-                    Log.d(TAG, "mbgl_map_stop: removing MapFragment from drawer");
+                    Timber.d("mbgl_map_stop: removing MapFragment from drawer");
                     getSupportFragmentManager()
                         .beginTransaction()
                         .remove(frag_current)
@@ -1978,7 +1973,7 @@ public class MainActivity
     public void OnMVTServerStopped() {
         mbgl_map_stop();
 
-        Log.d(TAG, "OnMVTServerStopped: updating status-related UX");
+        Timber.d("OnMVTServerStopped: updating status-related UX");
         textview_setColorizedText(m_tv_val_local_mvt_srvr_status, getString(R.string.stopped), getString(R.string.stopped), Color.RED);
         m_btn_local_mvt_srvr_ctrl.setTag(R.id.TAG__SRVR_RUNNING, false);
         m_btn_local_mvt_srvr_ctrl.setText(getString(R.string.open_tile_stream));
@@ -2004,7 +1999,7 @@ public class MainActivity
                         , f_postgis_toml = new File(f_filesDir.getPath(), SharedPrefsManager.STRING_SHARED_PREF.TM_POSTGIS_LOCAL_CONFIG_TOML__SELECTION.getValue());
                 s_config_toml = f_postgis_toml.getPath();
                 if (!f_postgis_toml.exists()) {
-                    Log.e(TAG, "mvt_server__start: failed to start mvt server for provider type postgis since toml file " + s_config_toml + " does not exist!");
+                    Timber.e("mvt_server__start: failed to start mvt server for provider type postgis since toml file " + s_config_toml + " does not exist!");
                     return;
                 }
             } else

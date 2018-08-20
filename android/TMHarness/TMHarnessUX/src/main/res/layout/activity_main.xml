@@ -398,6 +398,17 @@
                             android:orientation="horizontal">
 
                             <RadioButton
+                                android:id="@+id/rb_mvt_remote_tile_source_sel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:button="@null"
+                                android:drawableLeft="@android:drawable/btn_radio"
+                                android:drawableStart="@android:drawable/btn_radio"
+                                android:inputType="textCapCharacters"
+                                android:text="@string/provision_src__remote"
+                                android:textSize="14sp" />
+
+                            <RadioButton
                                 android:id="@+id/rb_mvt_local_tile_source_sel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -408,17 +419,6 @@
                                 android:drawableStart="@android:drawable/btn_radio"
                                 android:inputType="textCapCharacters"
                                 android:text="@string/provision_src__local"
-                                android:textSize="14sp" />
-
-                            <RadioButton
-                                android:id="@+id/rb_mvt_remote_tile_source_sel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:button="@null"
-                                android:drawableLeft="@android:drawable/btn_radio"
-                                android:drawableStart="@android:drawable/btn_radio"
-                                android:inputType="textCapCharacters"
-                                android:text="@string/provision_src__remote"
                                 android:textSize="14sp" />
                         </RadioGroup>
                     </LinearLayout>
